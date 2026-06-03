@@ -444,7 +444,7 @@ function ZeroGSection() {
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
           <div className="text-center lg:text-left">
             <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-yellow-300/55 bg-black/70 px-4 py-2 text-[9px] font-black uppercase tracking-[0.26em] text-yellow-300 shadow-[0_0_28px_rgba(255,211,74,0.18)] sm:rounded-md sm:border-yellow-400/40 sm:bg-black/60 sm:px-3 sm:py-1.5 sm:text-[11px] sm:tracking-[0.3em] sm:shadow-none">
-              Built On <OGLogo className="h-5 w-auto" />
+              Powered By <OGLogo className="h-5 w-auto" />
             </span>
             <h2 className="mx-auto mt-7 max-w-[22rem] font-pixel text-[2.25rem] leading-[1.05] tracking-tight min-[380px]:text-[2.65rem] sm:mt-6 sm:max-w-none sm:text-5xl sm:leading-[1.15] md:text-6xl lg:text-7xl">
               <div className="text-white drop-shadow-[0_0_24px_rgba(255,255,255,0.22)]">AI POWERED</div>
