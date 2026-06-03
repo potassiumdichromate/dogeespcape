@@ -478,7 +478,7 @@ function ZeroGSection() {
           </div>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:mt-12 md:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:mt-12 lg:grid-cols-3">
           <ZGCard color="purple" icon={<OGLogo className="h-12 w-auto" />} title={<><OGLogo className="h-6 w-auto" /> COMPUTE</>} subtitle="AI TRAINING" desc="Decentralized compute powering the training of smarter AI companions." />
           <ZGCard color="blue" icon={<OGLogo className="h-12 w-auto" />} title={<><OGLogo className="h-6 w-auto" /> STORAGE</>} subtitle="MODEL STORAGE" desc="Secure, decentralized storage for AI models and training outputs." />
           <ZGCard color="green" icon={<ShieldCheck className="h-10 w-10" />} title="VERIFIED HASHES" subtitle="TRANSPARENT AI" desc="Every AI update is linked to a verifiable hash for full transparency." />
@@ -571,7 +571,7 @@ function WeeklyToppers() {
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3">
           <PodiumCard rank={1} accent="yellow" name="DOGE MASTER" score="999,999" wins={128} games={156} winRate="82%" earned="12,500" reward="5,000" />
           <PodiumCard rank={2} accent="purple" name="SHIBRAIDER" score="850,420" wins={96} games={128} winRate="75%" earned="8,000" reward="3,000" />
           <PodiumCard rank={3} accent="orange" name="MOONWALKER" score="678,230" wins={75} games={112} winRate="67%" earned="5,000" reward="2,000" />
