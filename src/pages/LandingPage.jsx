@@ -14,6 +14,9 @@ import cardDogeos from "../assets/card-dogeos.png";
 import aiCompanion from "../assets/ai-companion.png";
 import zeroGAiDoge from "../assets/zero-g-ai-doge.png";
 import roboD from "../assets/robo-d.png";
+import topperFirst from "../assets/R1.png";
+import topperSecond from "../assets/R2.png";
+import topperThird from "../assets/R3.png";
 import { SectionThreeScene } from "../components/SectionThreeScene";
 import { useWallet } from "../context/WalletContext";
 
@@ -521,20 +524,17 @@ function ZeroGSection() {
   );
 }
 
-function PodiumCard({ rank, accent, name, score, wins, games, winRate, earned, reward }) {
+function PodiumCard({ rank, accent, name, score, wins, games, winRate, earned, reward, image }) {
   const c = podiumMap[accent];
   return (
     <div className={`premium-hover relative rounded-2xl border-2 bg-gradient-to-b from-black/80 to-zinc-950/80 p-4 backdrop-blur sm:p-5 ${c.border} ${c.glow}`}>
-      <div className="flex min-w-0 items-center gap-3">
-        <div className={`flex h-10 w-12 items-center justify-center rounded-md bg-gradient-to-b font-pixel text-base text-black shadow-lg sm:h-12 sm:w-14 sm:text-xl ${c.badge}`}>
-          {rank}
-        </div>
+      <div className="flex min-w-0 items-center justify-center min-[420px]:justify-start">
         <div className={`truncate font-pixel text-sm tracking-wider sm:text-lg md:text-xl ${c.name}`}>{name}</div>
       </div>
       <div className="mt-4 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4">
-        <div className={`flex aspect-square items-center justify-center rounded-xl border bg-gradient-to-br p-4 ${c.avatarBg}`}>
+        <div className={`mx-auto flex aspect-square max-h-40 items-center justify-center rounded-xl border bg-gradient-to-br p-4 min-[420px]:mx-0 min-[420px]:max-h-none ${c.avatarBg}`}>
           <img
-            src={iconLogo}
+            src={image || iconLogo}
             alt={`${name} avatar`}
             width={1000}
             height={1000}
@@ -564,8 +564,8 @@ function PodiumCard({ rank, accent, name, score, wins, games, winRate, earned, r
 function Row({ label, value, accent }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="font-pixel text-[8px] uppercase tracking-widest text-white/50 sm:text-[10px]">{label}</span>
-      <span className={`whitespace-nowrap font-pixel text-[10px] sm:text-sm ${accent}`}>{value}</span>
+      <span className="font-pixel text-xs uppercase tracking-widest text-white/50 lg:text-[10px]">{label}</span>
+      <span className={`whitespace-nowrap font-pixel text-sm lg:text-sm ${accent}`}>{value}</span>
     </div>
   );
 }
@@ -591,9 +591,9 @@ function WeeklyToppers() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3">
-          <PodiumCard rank={1} accent="yellow" name="BLOCKMASTER" score="4,934" wins={96} games={342} winRate="28%" earned="4,934" reward="5,000" />
-          <PodiumCard rank={2} accent="purple" name="PIXELPRO" score="4,158" wins={74} games={310} winRate="24%" earned="4,158" reward="3,000" />
-          <PodiumCard rank={3} accent="orange" name="CREEPERKING" score="3,168" wins={61} games={276} winRate="22%" earned="3,168" reward="2,000" />
+          <PodiumCard rank={1} accent="yellow" name="BLOCKMASTER" score="4,934" wins={96} games={342} winRate="28%" earned="4,934" reward="5,000" image={topperFirst} />
+          <PodiumCard rank={2} accent="purple" name="PIXELPRO" score="4,158" wins={74} games={310} winRate="24%" earned="4,158" reward="3,000" image={topperSecond} />
+          <PodiumCard rank={3} accent="orange" name="CREEPERKING" score="3,168" wins={61} games={276} winRate="22%" earned="3,168" reward="2,000" image={topperThird} />
         </div>
       </div>
     </section>
