@@ -181,7 +181,7 @@ function Nav({ onConnect, isConnecting }) {
 function Hero({ onWatchTrailer, onConnect, isConnecting }) {
   return (
     <section
-      className="relative min-h-[660px] overflow-hidden bg-cover bg-[64%_top] bg-no-repeat pt-28 sm:min-h-[720px] sm:bg-top sm:pt-28 lg:min-h-[760px] lg:pt-32"
+      className="relative min-h-[660px] overflow-hidden bg-cover bg-[76%_top] bg-no-repeat pt-28 sm:min-h-[720px] sm:bg-top sm:pt-28 lg:min-h-[760px] lg:pt-32"
       style={{ backgroundImage: `url(${fullHero})` }}
     >
 
@@ -414,10 +414,10 @@ function Features() {
 
 function FlowStep({ icon, title, color, desc }) {
   return (
-    <div className="premium-hover relative rounded-sm p-2">
-      <div className={`flex justify-center pt-3 ${color}`}>{icon}</div>
-      <div className={`mt-2 text-center text-sm font-black uppercase tracking-wider ${color}`}>{title}</div>
-      <div className="mt-1 text-center text-[11px] leading-tight text-yellow-100/60">{desc}</div>
+    <div className="premium-hover relative flex min-h-[132px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.035] px-3 py-4 text-center shadow-[0_12px_34px_rgba(0,0,0,0.28)] min-[420px]:min-h-[150px] sm:min-h-0 sm:overflow-visible sm:rounded-sm sm:border-0 sm:bg-transparent sm:p-2 sm:shadow-none">
+      <div className={`flex justify-center drop-shadow-[0_0_16px_currentColor] sm:pt-3 ${color}`}>{icon}</div>
+      <div className={`mt-2 text-center text-[12px] font-black uppercase tracking-[0.18em] min-[420px]:text-sm sm:tracking-wider ${color}`}>{title}</div>
+      <div className="mt-2 max-w-[11rem] text-center text-[9px] leading-relaxed tracking-[0.12em] text-yellow-100/70 min-[420px]:text-[10px] sm:mt-1 sm:text-[11px] sm:leading-tight sm:tracking-normal sm:text-yellow-100/60">{desc}</div>
     </div>
   );
 }
@@ -438,32 +438,32 @@ function ZGCard({ color, icon, title, subtitle, desc }) {
 
 function ZeroGSection() {
   return (
-    <section id="zero-g" className="relative mx-auto max-w-7xl overflow-hidden px-4 py-14 sm:px-6 sm:py-20 md:px-12 md:py-24">
+    <section id="zero-g" className="relative mx-auto max-w-7xl overflow-hidden px-4 py-12 sm:px-6 sm:py-20 md:px-12 md:py-24">
       <SectionThreeScene variant="zeroG" className="z-0 opacity-55 mix-blend-screen" />
       <div className="relative z-10">
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
           <div className="text-center lg:text-left">
-            <span className="inline-flex items-center justify-center gap-2 rounded-md border border-yellow-400/40 bg-black/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-yellow-300 sm:text-[11px] sm:tracking-[0.3em]">
+            <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-yellow-300/55 bg-black/70 px-4 py-2 text-[9px] font-black uppercase tracking-[0.26em] text-yellow-300 shadow-[0_0_28px_rgba(255,211,74,0.18)] sm:rounded-md sm:border-yellow-400/40 sm:bg-black/60 sm:px-3 sm:py-1.5 sm:text-[11px] sm:tracking-[0.3em] sm:shadow-none">
               Built On <OGLogo className="h-5 w-auto" />
             </span>
-            <h2 className="mt-6 font-pixel text-2xl leading-[1.15] tracking-tight min-[380px]:text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
+            <h2 className="mx-auto mt-7 max-w-[22rem] font-pixel text-[2.25rem] leading-[1.05] tracking-tight min-[380px]:text-[2.65rem] sm:mt-6 sm:max-w-none sm:text-5xl sm:leading-[1.15] md:text-6xl lg:text-7xl">
               <div className="text-white drop-shadow-[0_0_24px_rgba(255,255,255,0.22)]">AI POWERED</div>
-              <div className="flex flex-wrap items-center justify-center gap-3 text-yellow-300 drop-shadow-[0_0_24px_rgba(255,200,0,0.26)] sm:gap-4 lg:justify-start">
+              <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-yellow-300 drop-shadow-[0_0_24px_rgba(255,200,0,0.26)] sm:mt-0 sm:gap-4 lg:justify-start">
                 <span>BY</span>
                 <OGLogo className="h-[0.78em] w-auto" />
               </div>
             </h2>
-            <p className="mt-6 text-sm font-black uppercase tracking-wider text-white sm:text-lg">
+            <p className="mx-auto mt-6 max-w-[20rem] text-[12px] font-black uppercase leading-relaxed tracking-[0.16em] text-white sm:max-w-none sm:text-lg sm:tracking-wider">
               Your doge doesn't just run. <span className="text-yellow-400">It learns.</span>
             </p>
-            <p className="mx-auto mt-3 max-w-lg text-yellow-100/70 lg:mx-0">
+            <p className="mx-auto mt-4 max-w-[21rem] text-[13px] leading-loose tracking-[0.11em] text-yellow-100/70 sm:mt-3 sm:max-w-lg sm:text-base sm:leading-normal sm:tracking-normal lg:mx-0">
               Doge Escape uses <span className="inline-flex items-center gap-1 font-bold text-purple-400"><OGLogo /> Compute</span> for AI training
               and <span className="inline-flex items-center gap-1 font-bold text-sky-400"><OGLogo /> Storage</span> to store verified AI companion models.
             </p>
 
-            <div className="premium-hover mt-8 rounded-2xl border border-yellow-400/30 bg-black/60 p-4 backdrop-blur sm:p-6">
-              <div className="mb-5 text-[10px] font-black uppercase tracking-[0.22em] text-yellow-400 sm:text-[11px] sm:tracking-[0.3em]">How It Works</div>
-              <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-4">
+            <div className="premium-hover mt-8 rounded-[1.4rem] border border-yellow-300/45 bg-[linear-gradient(180deg,rgba(255,210,46,0.08),rgba(0,0,0,0.74)_22%,rgba(0,0,0,0.88))] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur sm:rounded-2xl sm:border-yellow-400/30 sm:bg-black/60 sm:bg-none sm:p-6 sm:shadow-none">
+              <div className="mb-4 text-center text-[10px] font-black uppercase tracking-[0.32em] text-yellow-300 drop-shadow-[0_0_18px_rgba(255,210,46,0.35)] sm:mb-5 sm:text-[11px] sm:tracking-[0.3em] sm:text-yellow-400 sm:drop-shadow-none">How It Works</div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                 <FlowStep icon={<Gamepad2 className="h-7 w-7" />} title="PLAY" color="text-yellow-400" desc="Gameplay creates behavior data." />
                 <FlowStep icon={<Brain className="h-7 w-7" />} title="TRAIN" color="text-purple-400" desc={<>AI companions learn using <span className="inline-flex items-center gap-1"><OGLogo className="h-3.5 w-auto" /> Compute.</span></>} />
                 <FlowStep icon={<Box className="h-7 w-7" />} title="STORE" color="text-sky-400" desc={<>Updated models are saved on <span className="inline-flex items-center gap-1"><OGLogo className="h-3.5 w-auto" /> Storage.</span></>} />
