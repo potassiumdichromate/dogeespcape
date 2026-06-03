@@ -304,65 +304,88 @@ function Teaser() {
   return (
     <section id="gameplay" className="relative mx-auto max-w-[92rem] overflow-hidden px-4 pb-14 pt-14 sm:px-6 sm:pb-20 sm:pt-20 md:pt-24 xl:px-8">
       <SectionThreeScene variant="teaser" className="z-0 opacity-45 mix-blend-screen" />
-      <div className="relative z-10 grid gap-8 lg:grid-cols-[1.35fr_0.65fr] lg:items-center lg:gap-10 xl:grid-cols-[1.45fr_0.55fr]">
-        <div className="pixel-border scanlines group relative aspect-video overflow-hidden rounded-md">
-          <video
-            ref={teaserVideoRef}
-            src={dogeTrailer}
-            aria-label="Doge Escape gameplay teaser"
-            width={1024}
-            height={768}
-            autoPlay
-            muted={teaserMuted}
-            loop
-            playsInline
-            preload="metadata"
-            onLoadedMetadata={() => syncTeaserAudio(teaserVolume, teaserMuted)}
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute bottom-3 right-3 z-10 flex max-w-[calc(100%-1.5rem)] items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              aria-label="Open teaser volume controls"
-              onClick={() => setIsTeaserAudioOpen(!isTeaserAudioOpen)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-sm border-2 border-primary/70 bg-card text-primary shadow-[3px_3px_0_oklch(0.1_0.04_255)] transition hover:bg-primary hover:text-primary-foreground sm:h-12 sm:w-12"
-            >
-              {teaserMuted || teaserVolume === 0 ? <VolumeX size={22} /> : <Volume2 size={22} />}
-            </button>
-            {isTeaserAudioOpen && (
-              <div className="flex items-center gap-3 rounded-sm border-2 border-primary/50 bg-[oklch(0.08_0.03_260_/_0.9)] px-3 py-2 shadow-[3px_3px_0_oklch(0.1_0.04_255)]">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={teaserMuted ? 0 : teaserVolume}
-                  onChange={(event) => {
-                    const v = Number(event.target.value);
-                    setTeaserVolume(v);
-                    setTeaserMuted(v === 0);
-                    syncTeaserAudio(v, v === 0);
-                  }}
-                  className="h-2 w-20 accent-[oklch(0.85_0.18_85)] sm:w-32"
-                />
-              </div>
-            )}
+      {/* Single card on mobile, transparent on desktop */}
+      <div className="relative z-10 overflow-hidden rounded-2xl border border-yellow-400/30 bg-gradient-to-b from-yellow-500/[0.07] via-black/50 to-black/70 p-4 shadow-[0_0_40px_rgba(255,200,0,0.08),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm min-[420px]:p-5 sm:p-6 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-none lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none">
+        {/* Mobile corner accents */}
+        <div className="pointer-events-none absolute left-0 top-0 h-8 w-8 border-l-2 border-t-2 border-yellow-400/40 rounded-tl-2xl lg:hidden" />
+        <div className="pointer-events-none absolute right-0 top-0 h-8 w-8 border-r-2 border-t-2 border-yellow-400/40 rounded-tr-2xl lg:hidden" />
+        <div className="pointer-events-none absolute bottom-0 left-0 h-8 w-8 border-b-2 border-l-2 border-yellow-400/40 rounded-bl-2xl lg:hidden" />
+        <div className="pointer-events-none absolute bottom-0 right-0 h-8 w-8 border-b-2 border-r-2 border-yellow-400/40 rounded-br-2xl lg:hidden" />
+        {/* Mobile top glow line */}
+        <div className="pointer-events-none absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent lg:hidden" />
+
+        <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr] lg:items-center lg:gap-10 xl:grid-cols-[1.45fr_0.55fr]">
+          {/* Video */}
+          <div className="pixel-border scanlines group relative order-2 aspect-[4/3] overflow-hidden rounded-md sm:aspect-[3/2] lg:order-none lg:aspect-video">
+            <video
+              ref={teaserVideoRef}
+              src={dogeTrailer}
+              aria-label="Doge Escape gameplay teaser"
+              width={1024}
+              height={768}
+              autoPlay
+              muted={teaserMuted}
+              loop
+              playsInline
+              preload="metadata"
+              onLoadedMetadata={() => syncTeaserAudio(teaserVolume, teaserMuted)}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute bottom-3 right-3 z-10 flex max-w-[calc(100%-1.5rem)] items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                aria-label="Open teaser volume controls"
+                onClick={() => setIsTeaserAudioOpen(!isTeaserAudioOpen)}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-sm border-2 border-primary/70 bg-card text-primary shadow-[3px_3px_0_oklch(0.1_0.04_255)] transition hover:bg-primary hover:text-primary-foreground sm:h-12 sm:w-12"
+              >
+                {teaserMuted || teaserVolume === 0 ? <VolumeX size={22} /> : <Volume2 size={22} />}
+              </button>
+              {isTeaserAudioOpen && (
+                <div className="flex items-center gap-3 rounded-sm border-2 border-primary/50 bg-[oklch(0.08_0.03_260_/_0.9)] px-3 py-2 shadow-[3px_3px_0_oklch(0.1_0.04_255)]">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={teaserMuted ? 0 : teaserVolume}
+                    onChange={(event) => {
+                      const v = Number(event.target.value);
+                      setTeaserVolume(v);
+                      setTeaserMuted(v === 0);
+                      syncTeaserAudio(v, v === 0);
+                    }}
+                    className="h-2 w-20 accent-[oklch(0.85_0.18_85)] sm:w-32"
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="text-center lg:text-left">
-          <p className="font-pixel-display text-xs tracking-widest text-primary">
-            OFFICIAL TEASER
-          </p>
-          <h2 className="mx-auto mt-4 max-w-[20rem] font-pixel-display text-[15px] leading-relaxed text-foreground min-[420px]:text-xl sm:max-w-none sm:text-3xl lg:mx-0">
-            CAN YOU ESCAPE...
-            <br />
-            <span className="text-primary">AND SECURE THE DOGE?</span>
-          </h2>
-          <p className="font-pixel-body mx-auto mt-5 max-w-[20rem] text-lg leading-snug text-foreground/80 sm:max-w-md sm:text-xl lg:mx-0">
-            Enemies everywhere. Coins calling.
-            <br />
-            Only one mission — escape & secure the Doge!
-          </p>
+          {/* Text */}
+          <div className="order-1 text-center lg:order-none lg:text-left">
+            <div className="mb-2 flex items-center justify-center gap-2 lg:justify-start lg:mb-0">
+              <Zap size={14} className="text-primary lg:hidden" fill="currentColor" />
+              <p className="font-pixel-display text-sm tracking-widest text-primary lg:text-xs">
+                OFFICIAL TEASER
+              </p>
+              <Zap size={14} className="text-primary lg:hidden" fill="currentColor" />
+            </div>
+            <h2 className="mx-auto mt-4 max-w-[20rem] font-pixel-display text-[14px] leading-relaxed text-foreground min-[420px]:text-lg sm:max-w-none sm:text-xl lg:mx-0 lg:text-3xl">
+              CAN YOU ESCAPE...
+              <br />
+              <span className="text-primary">AND SECURE THE DOGE?</span>
+            </h2>
+            {/* Mobile decorative divider */}
+            <div className="mx-auto my-1 flex max-w-[10rem] items-center gap-3 lg:hidden">
+              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-yellow-400/50" />
+              <span className="text-primary text-[8px]">🐾</span>
+              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-yellow-400/50" />
+            </div>
+            <p className="font-pixel-body mx-auto mt-0 max-w-[20rem] text-lg leading-snug text-foreground/80 sm:max-w-md sm:text-xl lg:mx-0 lg:mt-5">
+              Enemies everywhere. Coins calling.
+              <br />
+              Only one mission — escape & secure the Doge!
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -478,11 +501,7 @@ function ZeroGSection() {
           </div>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:mt-12 lg:grid-cols-3">
-          <ZGCard color="purple" icon={<OGLogo className="h-12 w-auto" />} title={<><OGLogo className="h-6 w-auto" /> COMPUTE</>} subtitle="AI TRAINING" desc="Decentralized compute powering the training of smarter AI companions." />
-          <ZGCard color="blue" icon={<OGLogo className="h-12 w-auto" />} title={<><OGLogo className="h-6 w-auto" /> STORAGE</>} subtitle="MODEL STORAGE" desc="Secure, decentralized storage for AI models and training outputs." />
-          <ZGCard color="green" icon={<ShieldCheck className="h-10 w-10" />} title="VERIFIED HASHES" subtitle="TRANSPARENT AI" desc="Every AI update is linked to a verifiable hash for full transparency." />
-        </div>
+
 
         <div className="mt-10 flex items-center justify-between gap-6">
           <Crown className="hidden h-8 w-8 text-yellow-400/60 md:block" />
@@ -604,9 +623,9 @@ function AICompanion() {
           YOUR LOYAL CO-PILOT. ALWAYS BY YOUR SIDE. <span className="text-primary">🐾</span>
         </p>
       </div>
-      <div className="premium-hover pixel-card relative z-10 rounded-md p-4 sm:p-6">
+      <div className="pixel-card relative z-10 rounded-md p-4 sm:p-6">
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="premium-hover scanlines relative overflow-hidden rounded-sm border-2 border-primary/40">
+          <div className="scanlines relative overflow-hidden rounded-sm border-2 border-primary/40">
             <img src={aiCompanion} alt="AI Companion" className="aspect-[4/3] h-full w-full object-cover sm:aspect-auto" />
             <div className="absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-2 rounded-sm border-2 border-[oklch(0.7_0.18_230)] bg-[oklch(0.13_0.04_255_/_0.85)] px-2 py-2 shadow-[3px_3px_0_oklch(0.13_0.04_255)] sm:bottom-3 sm:left-3 sm:max-w-[78%] sm:gap-3 sm:px-3">
               <img src={roboD} alt="Robo-D" className="h-8 w-8 shrink-0 sm:h-10 sm:w-10" />
@@ -615,43 +634,76 @@ function AICompanion() {
               </p>
             </div>
           </div>
-          <div className="premium-hover rounded-sm border-2 border-primary/40 bg-[oklch(0.14_0.04_255)] p-4 shadow-[4px_4px_0_oklch(0.1_0.04_255)] sm:p-5">
-            <div className="-mt-8 mb-4 flex justify-center sm:-mt-9">
-              <div className="btn-pixel inline-flex items-center gap-2 rounded-sm bg-primary px-3 py-2 font-pixel-display text-[8px] text-primary-foreground min-[380px]:text-[9px] sm:px-5 sm:text-[11px]">COMPANION: ROBO-D 🐾</div>
+          <div className="relative overflow-hidden rounded-sm border-2 border-primary/40 bg-[oklch(0.14_0.04_255)] p-4 shadow-[4px_4px_0_oklch(0.1_0.04_255)] sm:p-5">
+            {/* Card content (blurred behind overlay) */}
+            <div className="pointer-events-none select-none blur-[6px] opacity-40">
+              <div className="-mt-8 mb-4 flex justify-center sm:-mt-9">
+                <div className="btn-pixel inline-flex items-center gap-2 rounded-sm bg-primary px-3 py-2 font-pixel-display text-[8px] text-primary-foreground min-[380px]:text-[9px] sm:px-5 sm:text-[11px]">COMPANION: ROBO-D 🐾</div>
+              </div>
+              <p className="font-pixel-body text-lg leading-snug text-foreground/85">Robo-D is your AI copilot, optimized for survival. It analyzes, assists, and evolves with every run.</p>
+              <div className="my-5 h-[2px] w-full bg-primary/30" />
+              <ul className="space-y-3">
+                {stats.map((s) => (
+                  <li key={s.label} className="flex items-center gap-3">
+                    <span className="grid h-7 w-7 place-items-center rounded-full border-2" style={{ borderColor: s.color, color: s.color }}><s.icon size={14} /></span>
+                    <span className="font-pixel-display flex-1 text-[8px] tracking-widest text-foreground min-[380px]:text-[9px] sm:text-[10px]">{s.label}</span>
+                    <span className="flex gap-1">
+                      {Array.from({ length: s.total }).map((_, i) => (
+                        <span key={i} className="h-3 w-3 border-2 sm:h-4 sm:w-4" style={{ borderColor: s.color, background: i < s.filled ? s.color : "transparent" }} />
+                      ))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="my-5 h-[2px] w-full bg-primary/30" />
+              <p className="text-center font-pixel-display text-[10px] tracking-widest text-primary">
+                ACTIVE ABILITIES
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {abilities.map(({ name, desc, icon: AbilityIcon, color }) => (
+                  <div
+                    key={name}
+                    className="rounded-sm border-2 bg-[oklch(0.18_0.05_255_/_0.76)] p-3 text-center"
+                    style={{ borderColor: color }}
+                  >
+                    <span className="mx-auto grid h-10 w-10 place-items-center rounded-full border-2" style={{ borderColor: color, color }}>
+                      <AbilityIcon size={18} />
+                    </span>
+                    <p className="mt-3 font-pixel-display text-[8px]" style={{ color }}>{name}</p>
+                    <p className="font-pixel-body mt-2 text-sm leading-tight text-foreground/70">{desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="font-pixel-body text-lg leading-snug text-foreground/85">Robo-D is your AI copilot, optimized for survival. It analyzes, assists, and evolves with every run.</p>
-            <div className="my-5 h-[2px] w-full bg-primary/30" />
-            <ul className="space-y-3">
-              {stats.map((s) => (
-                <li key={s.label} className="flex items-center gap-3">
-                  <span className="grid h-7 w-7 place-items-center rounded-full border-2" style={{ borderColor: s.color, color: s.color }}><s.icon size={14} /></span>
-                  <span className="font-pixel-display flex-1 text-[8px] tracking-widest text-foreground min-[380px]:text-[9px] sm:text-[10px]">{s.label}</span>
-                  <span className="flex gap-1">
-                    {Array.from({ length: s.total }).map((_, i) => (
-                      <span key={i} className="h-3 w-3 border-2 sm:h-4 sm:w-4" style={{ borderColor: s.color, background: i < s.filled ? s.color : "transparent" }} />
-                    ))}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="my-5 h-[2px] w-full bg-primary/30" />
-            <p className="text-center font-pixel-display text-[10px] tracking-widest text-primary">
-              ACTIVE ABILITIES
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {abilities.map(({ name, desc, icon: Icon, color }) => (
-                <div
-                  key={name}
-                  className="premium-hover rounded-sm border-2 bg-[oklch(0.18_0.05_255_/_0.76)] p-3 text-center"
-                  style={{ borderColor: color }}
-                >
-                  <span className="mx-auto grid h-10 w-10 place-items-center rounded-full border-2" style={{ borderColor: color, color }}>
-                    <Icon size={18} />
-                  </span>
-                  <p className="mt-3 font-pixel-display text-[8px]" style={{ color }}>{name}</p>
-                  <p className="font-pixel-body mt-2 text-sm leading-tight text-foreground/70">{desc}</p>
+
+            {/* Coming Soon overlay */}
+            <div className="coming-soon-overlay absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 rounded-sm">
+              {/* Animated background particles */}
+              <div className="coming-soon-particles absolute inset-0 overflow-hidden rounded-sm">
+                <div className="coming-soon-particle coming-soon-particle-1" />
+                <div className="coming-soon-particle coming-soon-particle-2" />
+                <div className="coming-soon-particle coming-soon-particle-3" />
+              </div>
+
+              {/* Floating icon */}
+              <div className="coming-soon-icon-float relative">
+                <div className="coming-soon-icon-glow absolute inset-0" />
+                <div className="relative grid h-16 w-16 place-items-center rounded-2xl border-2 border-yellow-400/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-transparent backdrop-blur-sm sm:h-20 sm:w-20">
+                  <Bot className="h-8 w-8 text-yellow-400 sm:h-10 sm:w-10" />
                 </div>
-              ))}
+              </div>
+
+              {/* Badge */}
+              <div className="coming-soon-badge relative">
+                <div className="coming-soon-badge-glow" />
+                <div className="coming-soon-badge-inner relative overflow-hidden rounded-xl border-2 border-yellow-400/50 bg-black/70 px-6 py-3 backdrop-blur-md sm:px-8 sm:py-4">
+                  <div className="coming-soon-shimmer" />
+                  <p className="relative z-10 font-pixel text-sm tracking-[0.3em] text-yellow-300 drop-shadow-[0_0_18px_rgba(255,200,0,0.6)] sm:text-lg md:text-xl">
+                    COMING SOON
+                  </p>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -659,6 +711,7 @@ function AICompanion() {
     </section>
   );
 }
+
 
 function SocialLogo({ name }) {
   if (name === "telegram") {

@@ -4590,3 +4590,139 @@ body.landing-no-native-scrollbar::-webkit-scrollbar {
     opacity: 0;
   }
 }
+
+/* ─── Coming Soon Overlay ─── */
+
+.coming-soon-overlay {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255, 200, 0, 0.06) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.coming-soon-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.coming-soon-particle-1 {
+  width: 120px;
+  height: 120px;
+  top: 15%;
+  left: 10%;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.12), transparent 70%);
+  animation: csParticleFloat1 6s ease-in-out infinite;
+}
+
+.coming-soon-particle-2 {
+  width: 90px;
+  height: 90px;
+  bottom: 20%;
+  right: 12%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.1), transparent 70%);
+  animation: csParticleFloat2 8s ease-in-out infinite;
+}
+
+.coming-soon-particle-3 {
+  width: 60px;
+  height: 60px;
+  top: 50%;
+  left: 55%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.08), transparent 70%);
+  animation: csParticleFloat3 7s ease-in-out infinite;
+}
+
+.coming-soon-icon-float {
+  animation: csIconFloat 3s ease-in-out infinite;
+}
+
+.coming-soon-icon-glow {
+  border-radius: 1rem;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.35), transparent 65%);
+  filter: blur(18px);
+  animation: csIconGlow 2.8s ease-in-out infinite;
+}
+
+.coming-soon-badge-glow {
+  position: absolute;
+  inset: -8px -12px;
+  border-radius: 1rem;
+  background: radial-gradient(ellipse at center, rgba(250, 204, 21, 0.28), transparent 70%);
+  filter: blur(20px);
+  animation: csBadgeGlow 2.4s ease-in-out infinite;
+}
+
+.coming-soon-shimmer {
+  position: absolute;
+  top: -50%;
+  bottom: -50%;
+  left: -80%;
+  width: 50%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.04) 70%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: csShimmer 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.coming-soon-sub {
+  animation: csSubPulse 3s ease-in-out infinite;
+}
+
+@keyframes csParticleFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  50% { transform: translate(30px, -20px) scale(1.2); opacity: 1; }
+}
+
+@keyframes csParticleFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(-25px, 15px) scale(1.15); opacity: 0.9; }
+}
+
+@keyframes csParticleFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  50% { transform: translate(15px, -25px) scale(1.1); opacity: 0.8; }
+}
+
+@keyframes csIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes csIconGlow {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes csBadgeGlow {
+  0%, 100% { opacity: 0.4; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes csShimmer {
+  0%, 30% { left: -80%; opacity: 0; }
+  45% { opacity: 1; }
+  70%, 100% { left: 140%; opacity: 0; }
+}
+
+@keyframes csSubPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coming-soon-icon-float,
+  .coming-soon-icon-glow,
+  .coming-soon-particle,
+  .coming-soon-shimmer,
+  .coming-soon-badge-glow,
+  .coming-soon-sub {
+    animation: none;
+  }
+}
