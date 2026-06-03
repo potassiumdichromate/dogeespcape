@@ -11,15 +11,15 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded }) => {
 
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = `${UNITY_BUILD_URL}/build2/doge.loader.js`;
+    script.src = `${UNITY_BUILD_URL}/build3/doge.loader.js`;
     
     script.onload = () => {
       const canvas = document.querySelector("#unity-canvas");
       
       createUnityInstance(canvas, {
-        dataUrl: `${UNITY_BUILD_URL}/build2/doge.data`,
-        frameworkUrl: `${UNITY_BUILD_URL}/build2/doge.framework.js`,
-        codeUrl: `${UNITY_BUILD_URL}/build2/doge.wasm`,
+        dataUrl: `${UNITY_BUILD_URL}/build3/doge.data`,
+        frameworkUrl: `${UNITY_BUILD_URL}/build3/doge.framework.js`,
+        codeUrl: `${UNITY_BUILD_URL}/build3/doge.wasm`,
         streamingAssetsUrl: `${UNITY_BUILD_URL}/StreamingAssets`,
         companyName: "Kult Games",
         productName: "doge escape",
