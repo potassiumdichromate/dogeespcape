@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import fullHero from "../assets/full-hero.png";
 import dogeEscapeLogo from "../assets/DogeEscape-logo.png";
-import oldHeroIcon from "../assets/old.png";
+import dogeosHeadMove from "../assets/dogeos_head_move.gif";
 import ogLogoAsset from "../assets/OG.png";
 import kultLogo from "../assets/kultLogo.png";
 import iconLogo from "../assets/Icon-Logo.png";
@@ -228,7 +228,7 @@ function Hero({ onWatchTrailer, onConnect, isConnecting }) {
           <div className="mt-8 inline-flex items-center gap-2 font-pixel-display text-[8px] text-foreground/70 sm:text-[10px]">
             <span className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border-2 border-primary bg-primary shadow-[2px_2px_0_oklch(0.13_0.04_255)]">
               <img
-                src={oldHeroIcon}
+                src={dogeosHeadMove}
                 alt=""
                 width={1024}
                 height={1024}
