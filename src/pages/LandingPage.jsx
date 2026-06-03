@@ -572,9 +572,9 @@ function WeeklyToppers() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3">
-          <PodiumCard rank={1} accent="yellow" name="DOGE MASTER" score="999,999" wins={128} games={156} winRate="82%" earned="12,500" reward="5,000" />
-          <PodiumCard rank={2} accent="purple" name="SHIBRAIDER" score="850,420" wins={96} games={128} winRate="75%" earned="8,000" reward="3,000" />
-          <PodiumCard rank={3} accent="orange" name="MOONWALKER" score="678,230" wins={75} games={112} winRate="67%" earned="5,000" reward="2,000" />
+          <PodiumCard rank={1} accent="yellow" name="BLOCKMASTER" score="4,934" wins={96} games={342} winRate="28%" earned="4,934" reward="5,000" />
+          <PodiumCard rank={2} accent="purple" name="PIXELPRO" score="4,158" wins={74} games={310} winRate="24%" earned="4,158" reward="3,000" />
+          <PodiumCard rank={3} accent="orange" name="CREEPERKING" score="3,168" wins={61} games={276} winRate="22%" earned="3,168" reward="2,000" />
         </div>
       </div>
     </section>
