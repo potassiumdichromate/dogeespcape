@@ -7,12 +7,12 @@ import ogLogoAsset from "../assets/OG.png";
 import kultLogo from "../assets/kultLogo.png";
 import iconLogo from "../assets/Icon-Logo.png";
 import dogeTrailer from "../assets/Doge-New.mp4";
-import cardFast from "../assets/card-fast.jpg";
+import cardFast from "../assets/card-fast.png";
 import cardEnemies from "../assets/card-enemies.jpg";
 import cardCoins from "../assets/card-coins.jpg";
-import cardDogeos from "../assets/card-dogeos.jpg";
-import aiCompanion from "../assets/ai-companion.jpg";
-import zeroGAiDoge from "../assets/zero-g-ai-doge.jpg";
+import cardDogeos from "../assets/card-dogeos.png";
+import aiCompanion from "../assets/ai-companion.png";
+import zeroGAiDoge from "../assets/zero-g-ai-doge.png";
 import roboD from "../assets/robo-d.png";
 import { SectionThreeScene } from "../components/SectionThreeScene";
 import { useWallet } from "../context/WalletContext";
@@ -186,20 +186,20 @@ function Hero({ onWatchTrailer, onConnect, isConnecting }) {
     >
 
       <SectionThreeScene variant="hero" className="z-0 opacity-70 mix-blend-screen" />
-      <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-4 pb-10 pt-8 sm:px-6 sm:pb-16 sm:pt-10 lg:items-center lg:pt-12">
-        <div className="relative max-w-[92vw] sm:max-w-xl">
-          <h1 className="font-doge-title text-[2.55rem] leading-[0.95] min-[380px]:text-5xl sm:text-7xl md:text-[6.25rem]">
+      <div className="relative z-10 mx-auto grid min-h-[calc(660px-7rem)] max-w-7xl content-end gap-8 px-4 pb-0 pt-8 sm:min-h-0 sm:content-normal sm:px-6 sm:pb-16 sm:pt-10 lg:items-center lg:pt-12">
+        <div className="relative mx-auto max-w-[92vw] sm:mx-0 sm:max-w-xl">
+          <h1 className="text-center font-doge-title text-[2.55rem] leading-[0.95] min-[380px]:text-5xl sm:text-left sm:text-7xl md:text-[6.25rem]">
             DOG<span className="relative">E
               <span className="absolute -right-2 -top-2 text-xl sm:-top-3 sm:text-2xl">🐾</span>
             </span>
           </h1>
-          <h2 className="mt-3 font-doge-escape text-[1.95rem] leading-none min-[380px]:text-4xl sm:mt-4 sm:text-5xl md:text-6xl">
+          <h2 className="mt-3 text-center font-doge-escape text-[1.95rem] leading-none min-[380px]:text-4xl sm:mt-4 sm:text-left sm:text-5xl md:text-6xl">
             ESCAPE
           </h2>
-          <p className="mt-7 max-w-[18rem] font-pixel-display text-[10px] leading-relaxed text-primary drop-shadow-[2px_2px_0_oklch(0.13_0.04_255)] min-[380px]:text-xs sm:mt-8 sm:max-w-none sm:text-base">
+          <p className="mt-7 max-w-none whitespace-nowrap font-pixel-display text-[10px] leading-relaxed text-primary drop-shadow-[2px_2px_0_oklch(0.13_0.04_255)] min-[380px]:text-xs sm:mt-8 sm:text-base">
             BREAK FREE. SECURE THE DOGE.
           </p>
-          <p className="font-pixel-body mt-4 max-w-[18rem] text-lg leading-snug text-foreground/85 min-[380px]:text-xl sm:max-w-md sm:text-2xl">
+          <p className="font-pixel-body mt-4 hidden max-w-[18rem] text-lg leading-snug text-foreground/85 min-[380px]:text-xl sm:block sm:max-w-md sm:text-2xl">
             A wild arcade adventure on DogeOS. Survive the waves, defeat enemies,
             collect coins and escape!
           </p>
@@ -208,7 +208,7 @@ function Hero({ onWatchTrailer, onConnect, isConnecting }) {
               <button
                 type="button"
                 onClick={onConnect}
-                className="premium-cta premium-cta-primary clip-arcade-button font-pixel inline-flex min-h-[48px] w-full items-center justify-center gap-3 bg-gradient-to-b from-yellow-200 via-yellow-400 to-amber-500 px-5 py-3 text-[10px] uppercase tracking-[0.08em] text-black transition sm:min-h-[52px] sm:w-auto sm:px-6 sm:py-4 sm:text-[12px]"
+                className="premium-cta premium-cta-primary clip-arcade-button font-pixel inline-flex min-h-[48px] w-full items-center justify-center gap-3 bg-gradient-to-b from-yellow-200 via-yellow-400 to-amber-500 px-5 py-3 text-[12px] uppercase tracking-[0.08em] text-black transition sm:min-h-[52px] sm:w-auto sm:px-6 sm:py-4 sm:text-[12px]"
               >
                 <span className="premium-cta-label">{isConnecting ? "Connecting..." : "Connect Wallet"}</span>
               </button>
@@ -219,7 +219,7 @@ function Hero({ onWatchTrailer, onConnect, isConnecting }) {
                 onClick={onWatchTrailer}
                 className="premium-cta premium-cta-secondary trailer-glow clip-arcade-button w-full bg-yellow-400/75 p-[2px] transition sm:w-auto"
               >
-                <span className="premium-cta-label clip-arcade-button font-pixel inline-flex min-h-[48px] w-full items-center justify-center gap-3 bg-black/90 px-5 py-3 text-[10px] uppercase tracking-[0.08em] text-yellow-100 sm:min-h-[52px] sm:px-6 sm:py-4 sm:text-[12px]">
+                <span className="premium-cta-label clip-arcade-button font-pixel inline-flex min-h-[48px] w-full items-center justify-center gap-3 bg-black/90 px-5 py-3 text-[12px] uppercase tracking-[0.08em] text-yellow-100 sm:min-h-[52px] sm:px-6 sm:py-4 sm:text-[12px]">
                   Watch Trailer <Youtube size={16} className="text-destructive" />
                 </span>
               </button>
