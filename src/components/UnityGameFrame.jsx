@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { getCachedJwt, WALLET_KEY } from '../api/zerog';
 
 const UnityGameFrame = ({ isExpanded = false, onToggleExpanded }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,16 +11,27 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded }) => {
   const UNITY_BUILD_URL = import.meta.env.VITE_UNITY_BUILD_URL || 'https://your-r2-bucket.r2.dev';
 
   useEffect(() => {
+    // ── 0G: inject JWT + wallet into URL so Unity ZGBridge.jslib can read them ──
+    const jwt    = getCachedJwt();
+    const wallet = localStorage.getItem(WALLET_KEY) || '';
+    if (jwt || wallet) {
+      const url    = new URL(window.location.href);
+      if (jwt)    url.searchParams.set('jwt',           jwt);
+      if (wallet) url.searchParams.set('walletAddress', wallet);
+      window.history.replaceState({}, '', url.toString());
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const script = document.createElement('script');
-    script.src = `${UNITY_BUILD_URL}/build4/doge.loader.js`;
+    script.src = `${UNITY_BUILD_URL}/build5/doge.loader.js`;
     
     script.onload = () => {
       const canvas = document.querySelector("#unity-canvas");
       
       createUnityInstance(canvas, {
-        dataUrl: `${UNITY_BUILD_URL}/build4/doge.data`,
-        frameworkUrl: `${UNITY_BUILD_URL}/build4/doge.framework.js`,
-        codeUrl: `${UNITY_BUILD_URL}/build4/doge.wasm`,
+        dataUrl: `${UNITY_BUILD_URL}/build5/doge.data`,
+        frameworkUrl: `${UNITY_BUILD_URL}/build5/doge.framework.js`,
+        codeUrl: `${UNITY_BUILD_URL}/build5/doge.wasm`,
         streamingAssetsUrl: `${UNITY_BUILD_URL}/StreamingAssets`,
         companyName: "Kult Games",
         productName: "doge escape",

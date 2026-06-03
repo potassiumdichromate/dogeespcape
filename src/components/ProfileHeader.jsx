@@ -17,11 +17,12 @@ const ProfileHeader = ({ showBack }) => {
   const location = useLocation();
 
   const navItems = [
-    { label: 'Home', path: '/Home', icon: '🏠' },
-    { label: 'Game', path: '/play', icon: '🎮' },
-    { label: 'Market', path: '/market', iconImage: '/images/marketplace-icon-storefront.svg', iconAlt: 'Market' },
-    { label: 'Ranks', path: '/leaderboard', icon: '🏆' },
-    { label: 'Profile', path: '/profile', icon: '👤' },
+    { label: 'Home',    path: '/Home',         icon: '🏠' },
+    { label: 'Game',    path: '/play',          icon: '🎮' },
+    { label: 'Market',  path: '/market',        iconImage: '/images/marketplace-icon-storefront.svg', iconAlt: 'Market' },
+    { label: 'Ranks',   path: '/leaderboard',   icon: '🏆' },
+    { label: '0G',      path: '/og-dashboard',  icon: '🛡️' },
+    { label: 'Profile', path: '/profile',       icon: '👤' },
   ];
 
   const confirmDisconnect = () => {

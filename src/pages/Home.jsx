@@ -4,18 +4,24 @@ import AICompanionChat from '../components/AICompanionChat';
 import GlobalChat from '../components/GlobalChat';
 import DashboardScene from '../components/DashboardScene';
 import { useGame } from '../context/GameContext';
+import { useWallet } from '../context/WalletContext';
 
 const Home = () => {
   const {
-    coins,
-    highscore,
-    leaderboard,
+    coins, highscore, level, gamesWon, totalKills,
+    leaderboard, saveLoading,
   } = useGame();
-  const playerRank = leaderboard.find((entry) => entry.score <= highscore)?.rank || leaderboard.length + 1;
+
+  // Find own rank from real leaderboard
+  const { address } = useWallet();
+  const myEntry    = leaderboard.find(e => e.walletAddress?.toLowerCase() === address?.toLowerCase());
+  const playerRank = myEntry?.rank ?? (leaderboard.length > 0 ? leaderboard.length + 1 : '—');
+
   const statCards = [
-    { label: 'Coins', value: coins.toLocaleString(), icon: '💰' },
-    { label: 'Best Score', value: highscore.toLocaleString(), icon: '🏁' },
-    { label: 'Rank', value: `#${playerRank}`, icon: '🏆' },
+    { label: 'Coins',      value: saveLoading ? '…' : coins.toLocaleString(),    icon: '💰' },
+    { label: 'Best Score', value: saveLoading ? '…' : highscore.toLocaleString(), icon: '🏁' },
+    { label: 'Rank',       value: saveLoading ? '…' : `#${playerRank}`,           icon: '🏆' },
+    { label: 'Level',      value: saveLoading ? '…' : `Stage ${level + 1}`,       icon: '📊' },
   ];
 
   return (

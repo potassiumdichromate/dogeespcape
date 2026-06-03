@@ -13,6 +13,14 @@ const ProfilePage = () => {
     username,
     coins,
     highscore,
+    level,
+    gamesPlayed,
+    gamesWon,
+    gamesLost,
+    totalKills,
+    totalCoinsEarned,
+    winRate,
+    leaderboard,
     avatar,
     boats,
     companions,
@@ -50,12 +58,22 @@ const ProfilePage = () => {
   const ownedCompanions = companions.filter(c => c.owned);
   const ownedGuns = guns.filter(g => g.owned);
   const ownedCount = ownedBoats.length + ownedCompanions.length + ownedGuns.length;
+  // Stats derived from real save data
+  const killRate    = gamesPlayed > 0 ? Math.min(100, Math.round((totalKills / Math.max(gamesPlayed, 1)) * 2)) : 0;
+  const surviveRate = gamesPlayed > 0 ? Math.min(100, winRate) : 0;
+  const coinRate    = Math.min(100, Math.round((coins / 10000) * 100));
+  const xpRate      = Math.min(100, Math.round(((level + 1) / 9) * 100));
+
   const stats = [
-    { label: 'Speed', value: 72, color: '#f0b429' },
-    { label: 'Attack', value: 58, color: '#e04040' },
-    { label: 'Defense', value: 45, color: '#10b981' },
-    { label: 'Luck', value: 83, color: '#f7c948' },
+    { label: 'Kill Rate',    value: killRate,    color: '#f0b429' },
+    { label: 'Win Rate',     value: surviveRate, color: '#e04040' },
+    { label: 'Coin Power',   value: coinRate,    color: '#10b981' },
+    { label: 'Level',        value: xpRate,      color: '#f7c948' },
   ];
+
+  // Rank from real leaderboard
+  const myEntry    = leaderboard.find(e => e.walletAddress?.toLowerCase() === account?.toLowerCase());
+  const playerRank = myEntry?.rank ?? '—';
 
   const achievements = [
     { icon: '🗡️', title: 'First Blood', text: 'Win your first race', unlocked: true },
@@ -66,12 +84,13 @@ const ProfilePage = () => {
     { icon: '👑', title: 'Legendary', text: 'Reach level 50', unlocked: false },
   ];
 
-  const games = [
-    { mode: 'Race', result: '🏆 1st', time: '3m ago', score: 2450, badge: 'R' },
-    { mode: 'Survival', result: '💀 Died', time: '15m ago', score: 1200, badge: 'S' },
-    { mode: 'Race', result: '🥈 2nd', time: '42m ago', score: 2100, badge: 'R' },
-    { mode: 'Battle', result: '🏆 Won', time: '1h ago', score: 3200, badge: 'B' },
-    { mode: 'Race', result: '🥉 3rd', time: '2h ago', score: 1800, badge: 'R' },
+  // Session summary derived from save — real row data lives in 0G dashboard
+  const games = gamesPlayed > 0 ? [
+    { mode: 'Session', result: `${gamesWon} won / ${gamesLost} lost`, time: 'career total', score: totalCoinsEarned, badge: '🎮' },
+    { mode: 'Best Run', result: `${highscore} kills`,  time: 'all time high', score: highscore,        badge: '🏆' },
+    { mode: 'Level',    result: `Stage ${level + 1}`,  time: 'current',       score: coins,            badge: '📊' },
+  ] : [
+    { mode: 'No games yet', result: 'Play to see stats', time: '—', score: 0, badge: '🎮' },
   ];
 
   return (
@@ -122,16 +141,16 @@ const ProfilePage = () => {
                 </>
               )}
             </div>
-            <p>Joined 14 days ago • Level 8 • {getShortAddress(account) || 'Guest Racer'}</p>
+            <p>Level {level} • {getShortAddress(account) || 'Guest Racer'}</p>
             <div className="profile-pills">
-              <span>🏆 Rank #10</span>
-              <span>12 Wins</span>
+              <span>🏆 Rank #{playerRank}</span>
+              <span>{gamesWon} Wins</span>
               <span>{ownedCount} Items</span>
             </div>
           </div>
           <div className="profile-score">
-            <strong>{highscore.toLocaleString()}</strong>
-            <span>Total Score</span>
+            <strong>{coins.toLocaleString()}</strong>
+            <span>Coins</span>
           </div>
         </section>
 
@@ -203,7 +222,7 @@ const ProfilePage = () => {
             </div>
             <div className="win-rate-card mt-6">
               <span>Win Rate</span>
-              <strong>60%</strong>
+              <strong>{winRate}%</strong>
               <div><i /></div>
             </div>
           </section>

@@ -10,6 +10,7 @@ import GamePage from './pages/GamePage';
 import ProfilePage from './pages/ProfilePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import MarketPage from './pages/MarketPage';
+import OGDashboard from './pages/OGDashboard';
 
 const dogeOSClientId = import.meta.env.VITE_DOGEOS_CLIENT_ID || 'YOUR_DOGEOS_CLIENT_ID';
 
@@ -156,6 +157,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/og-dashboard"
+        element={
+          <ProtectedRoute>
+            <OGDashboard />
           </ProtectedRoute>
         }
       />
