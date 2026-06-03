@@ -558,7 +558,7 @@ function WeeklyToppers() {
       <div className="relative z-10 mx-auto max-w-7xl">
         <div className="text-center">
           <span className="inline-flex items-center gap-2 rounded-md border border-yellow-400/40 bg-black/60 px-3 py-1.5 font-pixel text-[9px] uppercase tracking-[0.25em] text-yellow-300 sm:text-[11px]">
-            Powered By <span className="text-yellow-400">DOGEOS</span>
+            Built For <span className="text-yellow-400">DOGEOS</span>
           </span>
           <h2 className="mt-6 flex flex-wrap items-center justify-center gap-3 font-pixel text-xl leading-[1.2] min-[380px]:text-2xl sm:gap-5 sm:text-4xl md:text-6xl lg:text-7xl">
             <Trophy className="h-7 w-7 shrink-0 text-yellow-400 drop-shadow-[0_0_20px_rgba(255,200,0,0.6)] sm:h-10 sm:w-10 md:h-14 md:w-14" />
