@@ -175,7 +175,20 @@ const MarketPage = () => {
               </div>
 
               {/* Grid Content */}
-              <div className="flex-1 panel-wood p-4 md:p-6 rounded-2xl shadow-pixel min-h-[500px]">
+              <div className="flex-1 panel-wood p-4 md:p-6 rounded-2xl shadow-pixel min-h-[500px] relative">
+                {/* Coming Soon overlay */}
+                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-black/15 backdrop-blur-[1.5px] pointer-events-auto">
+                  <div className="coming-soon-badge relative">
+                    <div className="coming-soon-badge-glow" />
+                    <div className="coming-soon-badge-inner relative overflow-hidden rounded-xl border-2 border-yellow-400/50 bg-black/50 px-8 py-4 backdrop-blur-xl">
+                      <div className="coming-soon-shimmer" />
+                      <p className="relative z-10 font-pixel text-base tracking-[0.3em] text-yellow-300 drop-shadow-[0_0_18px_rgba(255,200,0,0.6)] sm:text-xl md:text-2xl">
+                        COMING SOON
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}

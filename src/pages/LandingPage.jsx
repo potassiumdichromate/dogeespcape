@@ -635,9 +635,9 @@ function AICompanion() {
             </div>
           </div>
           <div className="relative overflow-hidden rounded-sm border-2 border-primary/40 bg-[oklch(0.14_0.04_255)] p-4 shadow-[4px_4px_0_oklch(0.1_0.04_255)] sm:p-5">
-            {/* Card content (blurred behind overlay) */}
-            <div className="pointer-events-none select-none blur-[6px] opacity-40">
-              <div className="-mt-8 mb-4 flex justify-center sm:-mt-9">
+            {/* Card content (fully visible, pointer-events disabled) */}
+            <div className="pointer-events-none select-none">
+              <div className="mt-1 mb-5 flex justify-center">
                 <div className="btn-pixel inline-flex items-center gap-2 rounded-sm bg-primary px-3 py-2 font-pixel-display text-[8px] text-primary-foreground min-[380px]:text-[9px] sm:px-5 sm:text-[11px]">COMPANION: ROBO-D 🐾</div>
               </div>
               <p className="font-pixel-body text-lg leading-snug text-foreground/85">Robo-D is your AI copilot, optimized for survival. It analyzes, assists, and evolves with every run.</p>
@@ -662,48 +662,32 @@ function AICompanion() {
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {abilities.map(({ name, desc, icon: AbilityIcon, color }) => (
                   <div
-                    key={name}
-                    className="rounded-sm border-2 bg-[oklch(0.18_0.05_255_/_0.76)] p-3 text-center"
-                    style={{ borderColor: color }}
-                  >
-                    <span className="mx-auto grid h-10 w-10 place-items-center rounded-full border-2" style={{ borderColor: color, color }}>
-                      <AbilityIcon size={18} />
-                    </span>
-                    <p className="mt-3 font-pixel-display text-[8px]" style={{ color }}>{name}</p>
-                    <p className="font-pixel-body mt-2 text-sm leading-tight text-foreground/70">{desc}</p>
-                  </div>
+                     key={name}
+                     className="rounded-sm border-2 bg-[oklch(0.18_0.05_255_/_0.76)] p-3 text-center"
+                     style={{ borderColor: color }}
+                   >
+                     <span className="mx-auto grid h-10 w-10 place-items-center rounded-full border-2" style={{ borderColor: color, color }}>
+                       <AbilityIcon size={18} />
+                     </span>
+                     <p className="mt-3 font-pixel-display text-[8px]" style={{ color }}>{name}</p>
+                     <p className="font-pixel-body mt-2 text-sm leading-tight text-foreground/70">{desc}</p>
+                   </div>
                 ))}
               </div>
             </div>
 
             {/* Coming Soon overlay */}
-            <div className="coming-soon-overlay absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 rounded-sm">
-              {/* Animated background particles */}
-              <div className="coming-soon-particles absolute inset-0 overflow-hidden rounded-sm">
-                <div className="coming-soon-particle coming-soon-particle-1" />
-                <div className="coming-soon-particle coming-soon-particle-2" />
-                <div className="coming-soon-particle coming-soon-particle-3" />
-              </div>
-
-              {/* Floating icon */}
-              <div className="coming-soon-icon-float relative">
-                <div className="coming-soon-icon-glow absolute inset-0" />
-                <div className="relative grid h-16 w-16 place-items-center rounded-2xl border-2 border-yellow-400/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-transparent backdrop-blur-sm sm:h-20 sm:w-20">
-                  <Bot className="h-8 w-8 text-yellow-400 sm:h-10 sm:w-10" />
-                </div>
-              </div>
-
-              {/* Badge */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-black/10">
+              {/* Badge with backdrop blur to blur only behind the coming soon strip */}
               <div className="coming-soon-badge relative">
                 <div className="coming-soon-badge-glow" />
-                <div className="coming-soon-badge-inner relative overflow-hidden rounded-xl border-2 border-yellow-400/50 bg-black/70 px-6 py-3 backdrop-blur-md sm:px-8 sm:py-4">
+                <div className="coming-soon-badge-inner relative overflow-hidden rounded-xl border-2 border-yellow-400/50 bg-black/40 px-6 py-3 backdrop-blur-xl sm:px-8 sm:py-4">
                   <div className="coming-soon-shimmer" />
                   <p className="relative z-10 font-pixel text-sm tracking-[0.3em] text-yellow-300 drop-shadow-[0_0_18px_rgba(255,200,0,0.6)] sm:text-lg md:text-xl">
                     COMING SOON
                   </p>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
