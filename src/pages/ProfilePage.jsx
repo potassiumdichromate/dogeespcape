@@ -29,12 +29,18 @@ const ProfilePage = () => {
     selectedCompanion,
     selectedGun,
     setUsername,
+    refreshSave,
   } = useGame();
   const { account, getShortAddress } = useWallet();
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(username);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
   const [selectedInventoryType, setSelectedInventoryType] = useState(null);
+
+  useEffect(() => {
+    console.log("HELLO RJ");
+    refreshSave();
+  }, [refreshSave]);
 
   useEffect(() => {
     setDraftName(username);
@@ -59,37 +65,37 @@ const ProfilePage = () => {
   const ownedGuns = guns.filter(g => g.owned);
   const ownedCount = ownedBoats.length + ownedCompanions.length + ownedGuns.length;
   // Stats derived from real save data
-  const killRate    = gamesPlayed > 0 ? Math.min(100, Math.round((totalKills / Math.max(gamesPlayed, 1)) * 2)) : 0;
+  const killRate = gamesPlayed > 0 ? Math.min(100, Math.round((totalKills / Math.max(gamesPlayed, 1)) * 2)) : 0;
   const surviveRate = gamesPlayed > 0 ? Math.min(100, winRate) : 0;
-  const coinRate    = Math.min(100, Math.round((coins / 10000) * 100));
-  const xpRate      = Math.min(100, Math.round(((level + 1) / 9) * 100));
+  const coinRate = Math.min(100, Math.round((coins / 10000) * 100));
+  const xpRate = Math.min(100, Math.round(((level + 1) / 9) * 100));
 
   const stats = [
-    { label: 'Kill Rate',    value: killRate,    color: '#f0b429' },
-    { label: 'Win Rate',     value: surviveRate, color: '#e04040' },
-    { label: 'Coin Power',   value: coinRate,    color: '#10b981' },
-    { label: 'Level',        value: xpRate,      color: '#f7c948' },
+    { label: 'Kill Rate', value: killRate, color: '#f0b429' },
+    { label: 'Win Rate', value: surviveRate, color: '#e04040' },
+    { label: 'Coin Power', value: coinRate, color: '#10b981' },
+    { label: 'Level', value: xpRate, color: '#f7c948' },
   ];
 
   // Rank from real leaderboard
-  const myEntry    = leaderboard.find(e => e.walletAddress?.toLowerCase() === account?.toLowerCase());
+  const myEntry = leaderboard.find(e => e.walletAddress?.toLowerCase() === account?.toLowerCase());
   const playerRank = myEntry?.rank ?? '—';
 
   // Achievements driven by real save data
   const achievements = [
-    { icon: '🎮', title: 'First Game',     text: 'Play your first session',         unlocked: gamesPlayed >= 1 },
-    { icon: '🏆', title: 'First Win',      text: 'Win your first level',            unlocked: gamesWon >= 1 },
-    { icon: '💀', title: 'Monster Slayer', text: 'Kill 10 enemies',                 unlocked: totalKills >= 10 },
-    { icon: '⚔️', title: 'Warrior',        text: 'Kill 100 enemies total',          unlocked: totalKills >= 100 },
-    { icon: '💰', title: 'Coin Collector', text: 'Earn 1,000 coins total',          unlocked: totalCoinsEarned >= 1000 },
-    { icon: '👑', title: 'Veteran',        text: 'Play 10 or more games',           unlocked: gamesPlayed >= 10 },
+    { icon: '🎮', title: 'First Game', text: 'Play your first session', unlocked: gamesPlayed >= 1 },
+    { icon: '🏆', title: 'First Win', text: 'Win your first level', unlocked: gamesWon >= 1 },
+    { icon: '💀', title: 'Monster Slayer', text: 'Kill 10 enemies', unlocked: totalKills >= 10 },
+    { icon: '⚔️', title: 'Warrior', text: 'Kill 100 enemies total', unlocked: totalKills >= 100 },
+    { icon: '💰', title: 'Coin Collector', text: 'Earn 1,000 coins total', unlocked: totalCoinsEarned >= 1000 },
+    { icon: '👑', title: 'Veteran', text: 'Play 10 or more games', unlocked: gamesPlayed >= 10 },
   ];
 
   // Session summary derived from save — real row data lives in 0G dashboard
   const games = gamesPlayed > 0 ? [
     { mode: 'Session', result: `${gamesWon} won / ${gamesLost} lost`, time: 'career total', score: totalCoinsEarned, badge: '🎮' },
-    { mode: 'Best Run', result: `${highscore} kills`,  time: 'all time high', score: highscore,        badge: '🏆' },
-    { mode: 'Level',    result: `Stage ${level + 1}`,  time: 'current',       score: coins,            badge: '📊' },
+    { mode: 'Best Run', result: `${highscore} kills`, time: 'all time high', score: highscore, badge: '🏆' },
+    { mode: 'Level', result: `Stage ${level + 1}`, time: 'current', score: coins, badge: '📊' },
   ] : [
     { mode: 'No games yet', result: 'Play to see stats', time: '—', score: 0, badge: '🎮' },
   ];
@@ -235,32 +241,32 @@ const ProfilePage = () => {
             <h2 className="text-2xl text-doge-gold font-bold text-shadow-pixel">My Collection ({ownedCount})</h2>
             <div className="h-0.5 flex-1 bg-doge-gold/10 mx-6"></div>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Boats */}
             {ownedBoats.map(item => (
-              <InventoryItemCard 
-                key={`boat-${item.id}`} 
-                item={item} 
-                type="boats" 
+              <InventoryItemCard
+                key={`boat-${item.id}`}
+                item={item}
+                type="boats"
                 onClick={() => { setSelectedInventoryItem(item); setSelectedInventoryType('boats'); }}
               />
             ))}
             {/* Companions */}
             {ownedCompanions.map(item => (
-              <InventoryItemCard 
-                key={`comp-${item.id}`} 
-                item={item} 
-                type="companions" 
+              <InventoryItemCard
+                key={`comp-${item.id}`}
+                item={item}
+                type="companions"
                 onClick={() => { setSelectedInventoryItem(item); setSelectedInventoryType('companions'); }}
               />
             ))}
             {/* Guns */}
             {ownedGuns.map(item => (
-              <InventoryItemCard 
-                key={`gun-${item.id}`} 
-                item={item} 
-                type="guns" 
+              <InventoryItemCard
+                key={`gun-${item.id}`}
+                item={item}
+                type="guns"
                 onClick={() => { setSelectedInventoryItem(item); setSelectedInventoryType('guns'); }}
               />
             ))}

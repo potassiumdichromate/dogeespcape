@@ -279,9 +279,11 @@ export const GameProvider = ({ children }) => {
   }, [account]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Manual refresh ─────────────────────────────────────────────────────────
-  const refreshSave = useCallback(() => {
-    loadSaveFromBackend();
-    loadLeaderboard();
+  const refreshSave = useCallback(async () => {
+    await Promise.all([
+      loadSaveFromBackend(),
+      loadLeaderboard(),
+    ]);
   }, [loadSaveFromBackend, loadLeaderboard]);
 
   // ── Marketplace ────────────────────────────────────────────────────────────
