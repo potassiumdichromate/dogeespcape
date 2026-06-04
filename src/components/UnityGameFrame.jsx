@@ -2,15 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { WALLET_KEY } from '../api/zerog';
 
-/**
- * UnityGameFrame
- *
- * Delivers JWT to Unity two ways:
- *   1. URL params (?jwt=TOKEN&walletAddress=0x...) — Unity reads on boot via ZG_GetUrlParam
- *   2. SendMessage after load                      — fallback if URL param missed
- *
- * Unity handles all save/load itself via UnityWebRequest using the JWT from PlayerPrefs.
- */
 const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddress }) => {
   const [isLoading,       setIsLoading]       = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -21,33 +12,34 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
 
   const UNITY_BUILD_URL = import.meta.env.VITE_UNITY_BUILD_URL || 'https://your-r2-bucket.r2.dev';
 
-  // ── Inject JWT into URL before Unity boots ────────────────────────────────
+  // ── Set credentials on window object so Unity jslib can read them ─────────
+  // jslib runs in the SAME window as this React page, so window.ZGJwt is
+  // always accessible regardless of where the Unity files are hosted.
   useEffect(() => {
-    if (!jwt && !walletAddress) return;
-    try {
-      const url = new URL(window.location.href);
-      if (jwt)           url.searchParams.set('jwt',           jwt);
-      if (walletAddress) url.searchParams.set('walletAddress', walletAddress);
-      window.history.replaceState({}, '', url.toString());
-      console.log('[0G] JWT injected into URL for Unity ZG_GetUrlParam');
-    } catch (e) {
-      console.warn('[0G] URL injection failed:', e.message);
-    }
+    const j = jwt    || localStorage.getItem('ZGJwt')    || '';
+    const w = walletAddress || localStorage.getItem(WALLET_KEY) || '';
+    window.ZGJwt    = j;
+    window.ZGWallet = w;
+    if (j) console.log('[0G] Credentials set on window.ZGJwt');
   }, [jwt, walletAddress]);
 
   // ── Load Unity ────────────────────────────────────────────────────────────
   useEffect(() => {
+    // Set credentials before Unity boots
+    window.ZGJwt    = jwt    || localStorage.getItem('ZGJwt')    || '';
+    window.ZGWallet = walletAddress || localStorage.getItem(WALLET_KEY) || '';
+
     const script = document.createElement('script');
-    script.src = `${UNITY_BUILD_URL}/build6/doge.loader.js`;
+    script.src = `${UNITY_BUILD_URL}/build7/doge.loader.js`;
 
     script.onload = () => {
       const canvas = document.querySelector('#unity-canvas');
       if (!canvas) { setIsLoading(false); return; }
 
       createUnityInstance(canvas, {
-        dataUrl:            `${UNITY_BUILD_URL}/build6/doge.data`,
-        frameworkUrl:       `${UNITY_BUILD_URL}/build6/doge.framework.js`,
-        codeUrl:            `${UNITY_BUILD_URL}/build6/doge.wasm`,
+        dataUrl:            `${UNITY_BUILD_URL}/build7/doge.data`,
+        frameworkUrl:       `${UNITY_BUILD_URL}/build7/doge.framework.js`,
+        codeUrl:            `${UNITY_BUILD_URL}/build7/doge.wasm`,
         streamingAssetsUrl: `${UNITY_BUILD_URL}/StreamingAssets`,
         companyName:        'Kult Games',
         productName:        'doge escape',
@@ -58,8 +50,7 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
         setIsLoading(false);
         console.log('[0G] Unity loaded');
 
-        // SendMessage fallback — deliver JWT 2s after Unity is ready
-        // (covers cases where ZG_GetUrlParam returned null on boot)
+        // SendMessage fallback 2s after load
         setTimeout(() => {
           const j = jwtRef.current || localStorage.getItem('ZGJwt') || '';
           const w = walletAddress  || localStorage.getItem(WALLET_KEY) || '';
@@ -73,13 +64,10 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
           }
         }, 2000);
       })
-      .catch((err) => {
-        console.error('[0G] Unity load error:', err);
-        setIsLoading(false);
-      });
+      .catch((err) => { console.error('[0G] Unity load error:', err); setIsLoading(false); });
     };
 
-    script.onerror = () => { console.error('[0G] Loader script failed'); setIsLoading(false); };
+    script.onerror = () => { console.error('[0G] Loader failed'); setIsLoading(false); };
     document.body.appendChild(script);
 
     return () => {
@@ -88,12 +76,14 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
     };
   }, [UNITY_BUILD_URL]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-send JWT if it arrives after Unity loads
+  // Re-send when jwt changes
   useEffect(() => {
     if (!jwt || !unityInstanceRef.current || isLoading) return;
     const w = walletAddress || localStorage.getItem(WALLET_KEY) || '';
+    window.ZGJwt    = jwt;
+    window.ZGWallet = w;
     try { unityInstanceRef.current.SendMessage('ZGManager', 'ReceiveCredentials', `${jwt}|${w}`); }
-    catch (e) { /* no ZGManager in this build */ }
+    catch (e) {}
   }, [jwt, walletAddress, isLoading]);
 
   return (
@@ -108,7 +98,6 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
           </span>
         </button>
       )}
-
       {isLoading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="unity-loading-scene absolute inset-0 flex flex-col items-center justify-center bg-doge-coal z-10">
@@ -130,7 +119,6 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
           </div>
         </motion.div>
       )}
-
       <canvas id="unity-canvas" width="1152" height="720"
         style={{ display: 'block', width: '100%', height: '100%' }} />
     </div>
