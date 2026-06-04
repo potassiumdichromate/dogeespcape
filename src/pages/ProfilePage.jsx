@@ -75,13 +75,14 @@ const ProfilePage = () => {
   const myEntry    = leaderboard.find(e => e.walletAddress?.toLowerCase() === account?.toLowerCase());
   const playerRank = myEntry?.rank ?? '—';
 
+  // Achievements driven by real save data
   const achievements = [
-    { icon: '🗡️', title: 'First Blood', text: 'Win your first race', unlocked: true },
-    { icon: '💎', title: 'Diamond Hands', text: 'Hold 1000 coins for 24h', unlocked: true },
-    { icon: '⚡', title: 'Speed Demon', text: 'Reach max speed 3 times', unlocked: true },
-    { icon: '📈', title: 'Trader Pro', text: 'Complete 50 trades', unlocked: false },
-    { icon: '✷', title: 'Blockbuster', text: 'Destroy 500 blocks', unlocked: false },
-    { icon: '👑', title: 'Legendary', text: 'Reach level 50', unlocked: false },
+    { icon: '🎮', title: 'First Game',     text: 'Play your first session',         unlocked: gamesPlayed >= 1 },
+    { icon: '🏆', title: 'First Win',      text: 'Win your first level',            unlocked: gamesWon >= 1 },
+    { icon: '💀', title: 'Monster Slayer', text: 'Kill 10 enemies',                 unlocked: totalKills >= 10 },
+    { icon: '⚔️', title: 'Warrior',        text: 'Kill 100 enemies total',          unlocked: totalKills >= 100 },
+    { icon: '💰', title: 'Coin Collector', text: 'Earn 1,000 coins total',          unlocked: totalCoinsEarned >= 1000 },
+    { icon: '👑', title: 'Veteran',        text: 'Play 10 or more games',           unlocked: gamesPlayed >= 10 },
   ];
 
   // Session summary derived from save — real row data lives in 0G dashboard
@@ -190,7 +191,7 @@ const ProfilePage = () => {
           </section>
 
           <section className="profile-column">
-            <h2>Achievements <span>(3/6)</span></h2>
+            <h2>Achievements <span>({achievements.filter(a => a.unlocked).length}/{achievements.length})</span></h2>
             <div className="achievement-grid">
               {achievements.map((item) => (
                 <div key={item.title} className={`achievement-card ${item.unlocked ? 'unlocked' : 'locked'}`}>

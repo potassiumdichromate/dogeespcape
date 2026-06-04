@@ -142,8 +142,9 @@ function ProofModal({ wallet, saveIndex, onClose }) {
 const TABS = ['Overview', 'Activity', 'Leaderboard', 'Explorer'];
 
 export default function OGDashboard() {
-  const { address, isConnected } = useWallet();
-  const { jwt: contextJwt, authLoading: contextAuthLoading } = useGame();
+  const { address, isConnected, signMessage } = useWallet();
+  const { jwt: contextJwt, authLoading: contextAuthLoading,
+          coins, level, highscore, gamesPlayed, gamesWon, gamesLost, totalKills } = useGame();
   const [jwt,         setJwt]         = useState(() => getCachedJwt());
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -175,12 +176,20 @@ export default function OGDashboard() {
 
   const doAuth = useCallback(async () => {
     if (!wallet) return;
+    if (typeof signMessage !== 'function') {
+      alert('Wallet signing not available. Reconnect your wallet and try again.');
+      return;
+    }
     setAuthLoading(true);
     try {
-      const token = await authenticate(wallet, async (msg) => signMessage(msg));
+      const token = await authenticate(wallet, async (msg) => {
+        const raw = await signMessage(msg);
+        return typeof raw === 'string' ? raw : (raw?.signature || String(raw));
+      });
       if (token) setJwt(token);
       else alert('Authentication failed — please try again.');
     } catch (err) {
+      console.error('[0G] doAuth error:', err);
       alert(`Authentication error: ${err.message}`);
     } finally {
       setAuthLoading(false);
@@ -342,6 +351,21 @@ export default function OGDashboard() {
         {/* ── Overview ──────────────────────────────────────────────────────── */}
         {tab === 'Overview' && (
           <div className="space-y-6">
+
+            {/* Player stats from live save */}
+            <div>
+              <h2 className="text-doge-gold font-heading text-sm uppercase tracking-wider mb-3">Your Stats</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <StatCard icon="🎮" label="Level"       value={`Stage ${level + 1}`} />
+                <StatCard icon="💰" label="Coins"       value={coins.toLocaleString()} />
+                <StatCard icon="💀" label="Total Kills" value={totalKills.toLocaleString()} />
+                <StatCard icon="🏆" label="Best Run"    value={`${highscore} kills`} />
+                <StatCard icon="🎯" label="Games Played" value={gamesPlayed.toLocaleString()} />
+                <StatCard icon="✅" label="Wins"         value={gamesWon.toLocaleString()} />
+                <StatCard icon="❌" label="Losses"       value={gamesLost.toLocaleString()} />
+                <StatCard icon="📈" label="Win Rate"     value={gamesPlayed > 0 ? `${Math.round((gamesWon/gamesPlayed)*100)}%` : '—'} />
+              </div>
+            </div>
 
             {/* Global stats */}
             {globalStats && (
