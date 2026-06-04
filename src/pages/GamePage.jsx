@@ -4,9 +4,11 @@ import ProfileHeader from '../components/ProfileHeader';
 import UnityGameFrame from '../components/UnityGameFrame';
 import LeaderboardPanel from '../components/LeaderboardPanel';
 import DailyTasksPanel from '../components/DailyTasksPanel';
+import { useGame } from '../context/GameContext';
 
 const GamePage = () => {
   const [isGameExpanded, setIsGameExpanded] = useState(false);
+  const { jwt, authLoading } = useGame();
 
   return (
     <div
@@ -19,10 +21,8 @@ const GamePage = () => {
           isGameExpanded ? 'max-w-none' : 'max-w-[1600px]'
         }`}
       >
-        {/* Profile Header */}
         {!isGameExpanded && <ProfileHeader />}
 
-        {/* Game Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -45,7 +45,7 @@ const GamePage = () => {
             </motion.div>
           )}
 
-          {/* Center: Game Canvas */}
+          {/* Center: Game — only mount Unity once JWT is in localStorage */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -54,10 +54,27 @@ const GamePage = () => {
               isGameExpanded ? 'h-screen w-full flex-1' : 'flex-none lg:flex-1'
             }`}
           >
-            <UnityGameFrame
-              isExpanded={isGameExpanded}
-              onToggleExpanded={() => setIsGameExpanded((current) => !current)}
-            />
+            {authLoading ? (
+              // Waiting for SIWE signature before loading Unity
+              <div className="flex flex-col items-center justify-center gap-4 text-center w-full aspect-[16/10] max-w-[960px] bg-doge-coal rounded-lg">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                  className="w-10 h-10 border-4 border-doge-gold/30 border-t-doge-gold rounded-full"
+                />
+                <p className="text-doge-gold font-heading text-sm">
+                  Sign the wallet message to enable cloud saves…
+                </p>
+                <p className="text-doge-iron text-xs">
+                  Check your wallet — a signature request is waiting
+                </p>
+              </div>
+            ) : (
+              <UnityGameFrame
+                isExpanded={isGameExpanded}
+                onToggleExpanded={() => setIsGameExpanded(current => !current)}
+              />
+            )}
           </motion.div>
 
           {/* Right: Daily Tasks */}
@@ -72,15 +89,11 @@ const GamePage = () => {
             </motion.div>
           )}
 
-          {/* Mobile: Show panels below game */}
+          {/* Mobile panels */}
           {!isGameExpanded && (
             <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="min-h-[280px]">
-                <LeaderboardPanel />
-              </div>
-              <div className="min-h-[280px]">
-                <DailyTasksPanel />
-              </div>
+              <div className="min-h-[280px]"><LeaderboardPanel /></div>
+              <div className="min-h-[280px]"><DailyTasksPanel /></div>
             </div>
           )}
         </motion.div>

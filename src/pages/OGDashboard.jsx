@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from '../context/WalletContext';
+import { useGame } from '../context/GameContext';
 import ProfileHeader from '../components/ProfileHeader';
 import {
   getCachedJwt, authenticate,
@@ -141,9 +142,15 @@ function ProofModal({ wallet, saveIndex, onClose }) {
 const TABS = ['Overview', 'Activity', 'Leaderboard', 'Explorer'];
 
 export default function OGDashboard() {
-  const { address, signMessage, isConnected } = useWallet();
-  const [jwt,          setJwt]          = useState(getCachedJwt);
-  const [authLoading,  setAuthLoading]  = useState(false);
+  const { address, isConnected } = useWallet();
+  const { jwt: contextJwt, authLoading: contextAuthLoading } = useGame();
+  const [jwt,         setJwt]         = useState(() => getCachedJwt());
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // Sync jwt from GameContext (auto-SIWE sets it there first)
+  useEffect(() => {
+    if (contextJwt && !jwt) setJwt(contextJwt);
+  }, [contextJwt]);
   const [tab,          setTab]          = useState('Overview');
 
   // Data state
@@ -244,9 +251,13 @@ export default function OGDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {jwt ? (
+            {(jwt || contextJwt) ? (
               <span className="px-3 py-1 bg-green-500/20 border border-green-500/40 text-green-300 rounded-full text-xs">
                 ✓ Authenticated
+              </span>
+            ) : (contextAuthLoading || authLoading) ? (
+              <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 rounded-full text-xs animate-pulse">
+                ⏳ Signing…
               </span>
             ) : (
               <button
@@ -254,7 +265,7 @@ export default function OGDashboard() {
                 disabled={authLoading || !isConnected}
                 className="px-4 py-2 bg-doge-gold text-doge-darker rounded-lg text-sm font-bold hover:bg-doge-gold/90 disabled:opacity-50 transition-colors"
               >
-                {authLoading ? 'Signing...' : 'Sign In with Wallet'}
+                {authLoading ? 'Signing...' : 'Sign In'}
               </button>
             )}
           </div>
