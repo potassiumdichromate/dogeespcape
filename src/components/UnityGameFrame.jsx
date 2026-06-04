@@ -12,22 +12,8 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
 
   const UNITY_BUILD_URL = import.meta.env.VITE_UNITY_BUILD_URL || 'https://your-r2-bucket.r2.dev';
 
-  // ── Set credentials on window object so Unity jslib can read them ─────────
-  // jslib runs in the SAME window as this React page, so window.ZGJwt is
-  // always accessible regardless of where the Unity files are hosted.
-  useEffect(() => {
-    const j = jwt    || localStorage.getItem('ZGJwt')    || '';
-    const w = walletAddress || localStorage.getItem(WALLET_KEY) || '';
-    window.ZGJwt    = j;
-    window.ZGWallet = w;
-    if (j) console.log('[0G] Credentials set on window.ZGJwt');
-  }, [jwt, walletAddress]);
-
   // ── Load Unity ────────────────────────────────────────────────────────────
   useEffect(() => {
-    // Set credentials before Unity boots
-    window.ZGJwt    = jwt    || localStorage.getItem('ZGJwt')    || '';
-    window.ZGWallet = walletAddress || localStorage.getItem(WALLET_KEY) || '';
 
     const script = document.createElement('script');
     script.src = `${UNITY_BUILD_URL}/build7/doge.loader.js`;
@@ -50,19 +36,18 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
         setIsLoading(false);
         console.log('[0G] Unity loaded');
 
-        // SendMessage fallback 2s after load
+        // Send JWT to GameBootstrapper (same as TempleEscape pattern)
         setTimeout(() => {
           const j = jwtRef.current || localStorage.getItem('ZGJwt') || '';
-          const w = walletAddress  || localStorage.getItem(WALLET_KEY) || '';
           if (j) {
             try {
-              instance.SendMessage('ZGManager', 'ReceiveCredentials', `${j}|${w}`);
-              console.log('[0G] Credentials sent via SendMessage');
+              instance.SendMessage('GameBootstrapper', 'SetJwtToken', j);
+              console.log('[0G] JWT sent to GameBootstrapper.SetJwtToken');
             } catch (e) {
               console.warn('[0G] SendMessage failed:', e.message);
             }
           }
-        }, 2000);
+        }, 1000);
       })
       .catch((err) => { console.error('[0G] Unity load error:', err); setIsLoading(false); });
     };
@@ -76,15 +61,12 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
     };
   }, [UNITY_BUILD_URL]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-send when jwt changes
+  // Re-send JWT to GameBootstrapper if it arrives after Unity loads
   useEffect(() => {
     if (!jwt || !unityInstanceRef.current || isLoading) return;
-    const w = walletAddress || localStorage.getItem(WALLET_KEY) || '';
-    window.ZGJwt    = jwt;
-    window.ZGWallet = w;
-    try { unityInstanceRef.current.SendMessage('ZGManager', 'ReceiveCredentials', `${jwt}|${w}`); }
+    try { unityInstanceRef.current.SendMessage('GameBootstrapper', 'SetJwtToken', jwt); }
     catch (e) {}
-  }, [jwt, walletAddress, isLoading]);
+  }, [jwt, isLoading]);
 
   return (
     <div className={`unity-stage-frame relative w-full overflow-hidden bg-doge-coal ${
