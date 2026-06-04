@@ -36,9 +36,10 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
         setIsLoading(false);
         console.log('[0G] Unity loaded');
 
-        // Send JWT to GameBootstrapper (same as TempleEscape pattern)
+        // Send JWT after 3s — gives Unity time to fully initialize all scenes
         setTimeout(() => {
           const j = jwtRef.current || localStorage.getItem('ZGJwt') || '';
+          console.log('[0G] SendMessage attempt — JWT:', j ? 'present' : 'missing');
           if (j) {
             try {
               instance.SendMessage('GameBootstrapper', 'SetJwtToken', j);
@@ -47,7 +48,7 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
               console.warn('[0G] SendMessage failed:', e.message);
             }
           }
-        }, 1000);
+        }, 3000);
       })
       .catch((err) => { console.error('[0G] Unity load error:', err); setIsLoading(false); });
     };
