@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { WALLET_KEY } from '../api/zerog';
+import { WALLET_KEY, saveBinary } from '../api/zerog';
+
+// ── BCSV builder (mirrors BackendSyncManager.cs Serialize) ───────────────────
+function buildBCSV(payload) {
+  const json      = JSON.stringify(payload);
+  const jsonBytes = new TextEncoder().encode(json);
+  const buf       = new Uint8Array(5 + jsonBytes.length);
+  buf[0] = 0x42; buf[1] = 0x43; buf[2] = 0x53; buf[3] = 0x56; // "BCSV"
+  buf[4] = 0x01; // version
+  buf.set(jsonBytes, 5);
+  return buf.buffer;
+}
 
 /**
  * UnityGameFrame — loads Unity WebGL and handles the full 0G save/load bridge.
@@ -41,7 +52,46 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
     }
   }, [jwt, walletAddress]);
 
-  // ── 2. Load Unity ─────────────────────────────────────────────────────────
+  // ── 2. Listen for DOGE_GAME_SAVE postMessage from Unity ──────────────────
+  // Unity fires ZG_PostGameSave(json) via jslib → window.postMessage
+  // This component catches it and calls saveBinary — the actual HTTP upload.
+  useEffect(() => {
+    const onMessage = async (e) => {
+      if (e.data?.type !== 'DOGE_GAME_SAVE') return;
+
+      const activeJwt = jwtRef.current || localStorage.getItem('ZGJwt');
+      if (!activeJwt) {
+        console.warn('[0G] DOGE_GAME_SAVE received but no JWT — save skipped');
+        return;
+      }
+
+      const payload = {
+        level:            e.data.level            ?? 0,
+        coins:            e.data.coins            ?? 0,
+        firstTimeDone:    e.data.firstTimeDone    ?? false,
+        totalKills:       e.data.totalKills       ?? 0,
+        highScore:        e.data.highScore        ?? 0,
+        gamesPlayed:      e.data.gamesPlayed      ?? 0,
+        gamesWon:         e.data.gamesWon         ?? 0,
+        gamesLost:        e.data.gamesLost        ?? 0,
+        totalCoinsEarned: e.data.totalCoinsEarned ?? 0,
+      };
+
+      console.log('[0G] DOGE_GAME_SAVE received from Unity — uploading:', payload);
+
+      try {
+        const result = await saveBinary(buildBCSV(payload), activeJwt);
+        console.log(`[0G] Save #${result.saveIndex} uploaded. rootHash: ${result.rootHash}`);
+      } catch (err) {
+        console.error('[0G] saveBinary failed:', err.message);
+      }
+    };
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []); // uses jwtRef — no need to re-run when jwt changes
+
+  // ── 3. Load Unity ─────────────────────────────────────────────────────────
   useEffect(() => {
     const script = document.createElement('script');
     script.src = `${UNITY_BUILD_URL}/build5/doge.loader.js`;
