@@ -4716,13 +4716,23 @@ body.landing-no-native-scrollbar::-webkit-scrollbar {
   50% { opacity: 0.8; }
 }
 
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.animate-blink {
+  animation: blink 1s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .coming-soon-icon-float,
   .coming-soon-icon-glow,
   .coming-soon-particle,
   .coming-soon-shimmer,
   .coming-soon-badge-glow,
-  .coming-soon-sub {
+  .coming-soon-sub,
+  .animate-blink {
     animation: none;
   }
 }

@@ -622,6 +622,12 @@ function AICompanion() {
         <p className="font-pixel-display mx-auto mt-5 max-w-xl text-[10px] leading-relaxed tracking-widest text-foreground/80 sm:text-sm">
           YOUR LOYAL CO-PILOT. ALWAYS BY YOUR SIDE. <span className="text-primary">🐾</span>
         </p>
+        <div className="mt-4 flex justify-center sm:hidden">
+          <span className="animate-blink inline-flex items-center gap-1.5 rounded-sm border-2 border-yellow-400/50 bg-black/80 px-2.5 py-1 text-[8px] font-pixel text-yellow-300 tracking-[0.15em] shadow-[0_0_12px_rgba(255,200,0,0.3)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 animate-pulse" />
+            COMING SOON
+          </span>
+        </div>
       </div>
       <div className="pixel-card relative z-10 rounded-md p-4 sm:p-6">
         <div className="grid gap-6 lg:grid-cols-2">
