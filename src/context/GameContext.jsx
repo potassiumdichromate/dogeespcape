@@ -4,6 +4,7 @@ import {
   getCachedJwt,
   getNonce,
   login,
+  walletLogin,
   loadBinary,
   deserializeBCSV,
   getDecentralizedLeaderboard,
@@ -235,21 +236,29 @@ export const GameProvider = ({ children }) => {
       return;
     }
 
-    console.log('[0G] Starting SIWE for:', account);
     setAuthLoading(true);
 
     (async () => {
       try {
-        const { message, nonce } = await getNonce(account);
-        console.log('[0G] Nonce received:', nonce);
+        let token;
 
-        const signature = await doSign(message);
-        console.log('[0G] Signature obtained');
+        if (isDogeAddress(account)) {
+          // DogeOS / Dogecoin wallet — no signature needed, use wallet address directly
+          console.log('[0G] DogeOS wallet — using wallet-login (no signature)');
+          const result = await walletLogin(account);
+          token = result.token;
+        } else {
+          // EVM wallet — full SIWE flow
+          console.log('[0G] EVM wallet — starting SIWE for:', account);
+          const { message, nonce } = await getNonce(account);
+          console.log('[0G] Nonce received:', nonce);
+          const signature = await doSign(message);
+          console.log('[0G] Signature obtained');
+          const result = await login(account, signature, nonce);
+          token = result.token;
+        }
 
-        const { token } = await login(account, signature, nonce);
         console.log('[0G] JWT received');
-
-        // Persist
         const stored = isEvmAddress(account) ? account.toLowerCase() : account;
         localStorage.setItem(JWT_KEY,    token);
         localStorage.setItem(WALLET_KEY, stored);
@@ -257,8 +266,8 @@ export const GameProvider = ({ children }) => {
         setJwt(token);
         loadSaveFromBackend(token);
       } catch (err) {
-        console.error('[0G] SIWE failed:', err.message);
-        authAttempted.current = false; // allow retry if user refreshes
+        console.error('[0G] Auth failed:', err.message);
+        authAttempted.current = false;
       } finally {
         setAuthLoading(false);
       }

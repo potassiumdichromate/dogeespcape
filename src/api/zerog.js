@@ -43,6 +43,15 @@ function authHeaders(jwt) {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
+// No-signature auth for DogeOS/Dogecoin wallets
+export async function walletLogin(wallet) {
+  return req('/auth/wallet-login', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ wallet })
+  });
+}
+
 export async function getNonce(wallet) {
   return req(`/auth/nonce?wallet=${encodeURIComponent(wallet)}`);
 }
