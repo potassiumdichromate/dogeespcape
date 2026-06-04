@@ -1,24 +1,45 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { WALLET_KEY } from '../api/zerog';
+import { WALLET_KEY, saveBinary } from '../api/zerog';
 
 /**
- * UnityGameFrame — loads Unity WebGL and delivers JWT + wallet via two methods:
+ * UnityGameFrame — loads Unity WebGL and handles the full 0G save/load bridge.
  *
- *  1. URL params (?jwt=...&walletAddress=...) — read by ZGBridge.jslib on startup
- *  2. SendMessage after load             — fallback if URL params were missed
+ * JWT delivery to Unity (two methods):
+ *   1. URL params (?jwt=...&walletAddress=...) — ZGBridge.jslib reads these on boot
+ *   2. SendMessage after load                  — fallback if URL params were missed
  *
- * Accepts jwt + walletAddress as props (passed from GamePage) so we don't have
- * to read from localStorage after-the-fact.
+ * Save flow (Unity → React → Backend):
+ *   Unity calls ZG_SendSaveData(json) via jslib
+ *   → dispatches 'zg_save' CustomEvent
+ *   → this component listens, wraps JSON in BCSV header, POSTs to backend
+ *   React handles the HTTP because it holds the JWT reliably.
  */
+
+const BCSV_MAGIC   = new Uint8Array([0x42, 0x43, 0x53, 0x56]); // "BCSV"
+const BCSV_VERSION = 0x01;
+
+function jsonToBCSV(json) {
+  const jsonBytes = new TextEncoder().encode(json);
+  const buffer    = new Uint8Array(5 + jsonBytes.length);
+  buffer.set(BCSV_MAGIC, 0);
+  buffer[4] = BCSV_VERSION;
+  buffer.set(jsonBytes, 5);
+  return buffer.buffer; // ArrayBuffer
+}
+
 const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddress }) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading,       setIsLoading]       = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const unityInstanceRef = useRef(null);
+  const jwtRef           = useRef(jwt);   // always-current jwt without re-running Unity effect
+
+  // Keep jwtRef in sync so the save listener always uses the latest token
+  useEffect(() => { jwtRef.current = jwt; }, [jwt]);
 
   const UNITY_BUILD_URL = import.meta.env.VITE_UNITY_BUILD_URL || 'https://your-r2-bucket.r2.dev';
 
-  // ── Inject into URL before Unity boots ────────────────────────────────────
+  // ── 1. Inject JWT into URL so ZGBridge.jslib can read it on boot ──────────
   useEffect(() => {
     if (!jwt && !walletAddress) return;
     try {
@@ -26,20 +47,43 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
       if (jwt)           url.searchParams.set('jwt',           jwt);
       if (walletAddress) url.searchParams.set('walletAddress', walletAddress);
       window.history.replaceState({}, '', url.toString());
-      console.log('[0G] JWT injected into URL params for Unity');
+      console.log('[0G] JWT injected into page URL for Unity jslib');
     } catch (e) {
       console.warn('[0G] URL injection failed:', e.message);
     }
   }, [jwt, walletAddress]);
 
-  // ── Load Unity ─────────────────────────────────────────────────────────────
+  // ── 2. Listen for Unity save events (ZG_SendSaveData jslib) ──────────────
+  useEffect(() => {
+    const handleSave = async (e) => {
+      const json = e.detail;
+      if (!json) { console.warn('[0G] zg_save event had no data'); return; }
+
+      const activeJwt = jwtRef.current || localStorage.getItem('ZGJwt');
+      if (!activeJwt) { console.warn('[0G] zg_save: no JWT, save skipped'); return; }
+
+      console.log('[0G] Received save from Unity, uploading to backend...');
+      try {
+        const bcsvBuffer = jsonToBCSV(json);
+        const result     = await saveBinary(bcsvBuffer, activeJwt);
+        console.log(`[0G] Save #${result.saveIndex} uploaded. rootHash: ${result.rootHash}`);
+      } catch (err) {
+        console.error('[0G] Frontend save failed:', err.message);
+      }
+    };
+
+    window.addEventListener('zg_save', handleSave);
+    return () => window.removeEventListener('zg_save', handleSave);
+  }, []); // stable — uses jwtRef for latest JWT
+
+  // ── 3. Load Unity ─────────────────────────────────────────────────────────
   useEffect(() => {
     const script = document.createElement('script');
     script.src = `${UNITY_BUILD_URL}/build5/doge.loader.js`;
 
     script.onload = () => {
       const canvas = document.querySelector('#unity-canvas');
-      if (!canvas) { console.error('[0G] unity-canvas not found'); return; }
+      if (!canvas) { console.error('[0G] #unity-canvas not found'); return; }
 
       createUnityInstance(canvas, {
         dataUrl:            `${UNITY_BUILD_URL}/build5/doge.data`,
@@ -57,31 +101,28 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
         setIsLoading(false);
         console.log('[0G] Unity loaded');
 
-        // ── SendMessage fallback: deliver JWT after Unity is fully ready ──────
-        // This covers the case where ZGBridge.jslib couldn't read URL params
-        // (e.g., old build without jslib, or timing issue).
+        // ── 4. SendMessage fallback: deliver JWT 2s after Unity is ready ─────
         setTimeout(() => {
-          const activeJwt    = jwt    || localStorage.getItem('ZGJwt')    || '';
-          const activeWallet = walletAddress || localStorage.getItem(WALLET_KEY) || '';
+          const activeJwt    = jwtRef.current || localStorage.getItem('ZGJwt') || '';
+          const activeWallet = walletAddress   || localStorage.getItem(WALLET_KEY) || '';
           if (activeJwt) {
             try {
-              // 'ZGManager' is the GameObject name, 'ReceiveCredentials' is the method
               unityInstance.SendMessage('ZGManager', 'ReceiveCredentials', `${activeJwt}|${activeWallet}`);
               console.log('[0G] Credentials sent to Unity via SendMessage');
             } catch (e) {
-              console.warn('[0G] SendMessage failed (ZGManager may not exist in build):', e.message);
+              console.warn('[0G] SendMessage failed (ZGManager may not exist in this build):', e.message);
             }
           }
-        }, 2000); // 2s delay — give Unity time to finish scene initialization
+        }, 2000);
       })
-      .catch((error) => {
-        console.error('[0G] Unity load error:', error);
+      .catch((err) => {
+        console.error('[0G] Unity load error:', err);
         setIsLoading(false);
       });
     };
 
     script.onerror = () => {
-      console.error('[0G] Unity loader script failed to load from R2');
+      console.error('[0G] Unity loader failed to load from R2');
       setIsLoading(false);
     };
 
@@ -96,74 +137,56 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
     };
   }, [UNITY_BUILD_URL]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Re-deliver credentials if JWT arrives after Unity loads ───────────────
+  // ── 5. Re-deliver JWT whenever it changes (e.g., re-auth) ────────────────
   useEffect(() => {
     if (!jwt || !unityInstanceRef.current || isLoading) return;
+    const activeWallet = walletAddress || localStorage.getItem(WALLET_KEY) || '';
     try {
-      const activeWallet = walletAddress || localStorage.getItem(WALLET_KEY) || '';
       unityInstanceRef.current.SendMessage('ZGManager', 'ReceiveCredentials', `${jwt}|${activeWallet}`);
-      console.log('[0G] JWT updated in Unity via SendMessage');
-    } catch (e) {
-      // Unity may not have ZGManager — silent fail
-    }
+      console.log('[0G] Updated JWT sent to Unity');
+    } catch (e) { /* Unity may not have ZGManager */ }
   }, [jwt, walletAddress, isLoading]);
 
   return (
     <div
       className={`unity-stage-frame relative w-full overflow-hidden bg-doge-coal ${
-        isExpanded
-          ? 'h-[100svh] max-w-none rounded-none'
-          : 'max-w-[960px] aspect-[16/10] rounded-lg'
+        isExpanded ? 'h-[100svh] max-w-none rounded-none' : 'max-w-[960px] aspect-[16/10] rounded-lg'
       }`}
     >
       {onToggleExpanded && (
-        <button
-          type="button"
-          onClick={onToggleExpanded}
-          className="game-screen-toggle"
+        <button type="button" onClick={onToggleExpanded} className="game-screen-toggle"
           aria-label={isExpanded ? 'Reduce game screen' : 'Make game full screen'}
           title={isExpanded ? 'Reduce game screen' : 'Make game full screen'}
         >
-          <span
-            className={`screen-size-icon ${isExpanded ? 'screen-size-icon--shrink' : 'screen-size-icon--expand'}`}
-            aria-hidden="true"
-          >
+          <span className={`screen-size-icon ${isExpanded ? 'screen-size-icon--shrink' : 'screen-size-icon--expand'}`} aria-hidden="true">
             <span /><span />
           </span>
         </button>
       )}
 
       {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="unity-loading-scene absolute inset-0 flex flex-col items-center justify-center bg-doge-coal z-10"
         >
           <div className="unity-loader-card">
             <div className="unity-loader-orbit" aria-hidden="true">
               <span>💰</span><span>💎</span><span>⚡</span>
             </div>
-            <motion.div
-              animate={{ y: [0, -8, 0], rotate: [-2, 2, -2] }}
+            <motion.div animate={{ y: [0, -8, 0], rotate: [-2, 2, -2] }}
               transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
               className="unity-loader-doge"
             >
               <img src="/images/doge_avatar.png" alt="Doge pilot loading" />
             </motion.div>
-            <div className="unity-loader-boat" aria-hidden="true">
-              <span>🚤</span><i />
-            </div>
+            <div className="unity-loader-boat" aria-hidden="true"><span>🚤</span><i /></div>
             <div className="unity-loader-copy">
               <p>Booting Doge Escape</p>
               <h3>Loading Game...</h3>
             </div>
             <div className="unity-loader-progress">
               <div className="unity-loader-track">
-                <motion.div
-                  animate={{ width: `${loadingProgress}%` }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                  className="unity-loader-fill"
-                />
+                <motion.div animate={{ width: `${loadingProgress}%` }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }} className="unity-loader-fill" />
               </div>
               <div className="unity-loader-percent">
                 <span>Syncing blocks</span>
@@ -174,12 +197,8 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
         </motion.div>
       )}
 
-      <canvas
-        id="unity-canvas"
-        width="1152"
-        height="720"
-        style={{ display: 'block', width: '100%', height: '100%' }}
-      />
+      <canvas id="unity-canvas" width="1152" height="720"
+        style={{ display: 'block', width: '100%', height: '100%' }} />
     </div>
   );
 };
