@@ -2,11 +2,9 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { useWallet } from './WalletContext';
 import {
   getCachedJwt,
-  getJwtForWallet,
   getNonce,
   login,
   walletLogin,
-  clearJwt,
   loadBinary,
   deserializeBCSV,
   getDecentralizedLeaderboard,
@@ -75,7 +73,6 @@ export const GameProvider = ({ children }) => {
   const [jwt,         setJwt]         = useState(() => getCachedJwt());
   const [authLoading, setAuthLoading] = useState(false);
   const authAttempted = useRef(false);
-  const prevAccount   = useRef(null);   // track wallet switches
 
   // ── Identity ───────────────────────────────────────────────────────────────
   const [username, setUsernameState] = useState('Doge Pilot');
@@ -213,47 +210,32 @@ export const GameProvider = ({ children }) => {
   }, [account, currentProvider, signMessage]);
 
   // ── AUTO-AUTH ──────────────────────────────────────────────────────────────
-  // Fires when account connects OR changes (wallet switch).
-  // Uses wallet-specific JWT check so different wallets never share tokens.
 
   useEffect(() => {
-    // Wallet switched or logged out
-    if (account !== prevAccount.current) {
-      prevAccount.current = account;
-      authAttempted.current = false;   // reset so new wallet can authenticate
-
-      if (!account) {
-        // Logged out — clear JWT and reset all stats
-        clearJwt();
-        setJwt(null);
-        setCoins(0); setHighscore(0); setLevel(0);
-        setTotalKills(0); setGamesPlayed(0); setGamesWon(0);
-        setGamesLost(0); setTotalCoinsEarned(0);
-        setSaveLoaded(false);
-        return;
-      }
+    if (!account) {
+      // Logged out — reset auth flag so next login works
+      authAttempted.current = false;
+      return;
     }
-
-    if (!account) return;
 
     // Always refresh leaderboard (public)
     loadLeaderboard();
 
-    // Check for valid cached JWT that belongs to THIS wallet
-    const cached = getJwtForWallet(account);
+    // Use any valid cached JWT
+    const cached = getCachedJwt();
     if (cached) {
-      console.log('[0G] JWT cached for this wallet — loading save');
+      console.log('[0G] JWT cached — loading save');
       setJwt(cached);
       loadSaveFromBackend(cached);
       return;
     }
 
-    // Avoid double-sign
+    // One auth attempt per session
     if (authAttempted.current) return;
     authAttempted.current = true;
 
     if (!isEvmAddress(account) && !isDogeAddress(account)) {
-      console.warn('[0G] Unrecognized address format, skipping auth:', account);
+      console.warn('[0G] Unrecognized address format:', account);
       return;
     }
 
