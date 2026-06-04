@@ -173,25 +173,27 @@ export const GameProvider = ({ children }) => {
   }, []);
 
   // ── SIWE sign helper ───────────────────────────────────────────────────────
-  // Tries multiple signing methods to handle both EVM and Dogecoin wallets.
   const doSign = useCallback(async (message) => {
-    console.log('[0G] Attempting to sign message...');
+    console.log('[0G] Signing message for wallet:', account);
 
-    // 1. Try EVM provider.request (most standard — works with MetaMask, WalletConnect, etc.)
-    if (currentProvider?.request) {
+    const isDoge = isDogeAddress(account || '');
+
+    // For EVM wallets only — personal_sign via raw provider
+    // Skip for Dogecoin: currentProvider.request triggers reconnect, not signing
+    if (!isDoge && currentProvider?.request) {
       try {
         const raw = await currentProvider.request({
           method: 'personal_sign',
           params: [message, account],
         });
         const sig = extractSignature(raw);
-        if (sig) { console.log('[0G] Signed via provider.request'); return sig; }
+        if (sig) { console.log('[0G] Signed via personal_sign (EVM)'); return sig; }
       } catch (e) {
-        console.warn('[0G] provider.request failed:', e.message);
+        console.warn('[0G] personal_sign failed:', e.message);
       }
     }
 
-    // 2. Try DogeOS signMessage (covers Dogecoin / MyDoge wallet)
+    // DogeOS signMessage — works for both Dogecoin and EVM fallback
     if (typeof signMessage === 'function') {
       try {
         const raw = await signMessage(message);
@@ -199,10 +201,11 @@ export const GameProvider = ({ children }) => {
         if (sig) { console.log('[0G] Signed via DogeOS signMessage'); return sig; }
       } catch (e) {
         console.warn('[0G] signMessage failed:', e.message);
+        throw new Error(`Signing failed: ${e.message}`);
       }
     }
 
-    throw new Error('No signing method succeeded. Is your wallet unlocked?');
+    throw new Error('No signing method available. Is your wallet unlocked?');
   }, [account, currentProvider, signMessage]);
 
   // ── AUTO-SIWE ──────────────────────────────────────────────────────────────

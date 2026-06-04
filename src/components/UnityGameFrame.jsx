@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { WALLET_KEY, saveBinary } from '../api/zerog';
+import { WALLET_KEY } from '../api/zerog';
 
 /**
  * UnityGameFrame — loads Unity WebGL and handles the full 0G save/load bridge.
@@ -15,18 +15,6 @@ import { WALLET_KEY, saveBinary } from '../api/zerog';
  *   → this component listens, wraps JSON in BCSV header, POSTs to backend
  *   React handles the HTTP because it holds the JWT reliably.
  */
-
-const BCSV_MAGIC   = new Uint8Array([0x42, 0x43, 0x53, 0x56]); // "BCSV"
-const BCSV_VERSION = 0x01;
-
-function jsonToBCSV(json) {
-  const jsonBytes = new TextEncoder().encode(json);
-  const buffer    = new Uint8Array(5 + jsonBytes.length);
-  buffer.set(BCSV_MAGIC, 0);
-  buffer[4] = BCSV_VERSION;
-  buffer.set(jsonBytes, 5);
-  return buffer.buffer; // ArrayBuffer
-}
 
 const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddress }) => {
   const [isLoading,       setIsLoading]       = useState(true);
@@ -53,30 +41,7 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
     }
   }, [jwt, walletAddress]);
 
-  // ── 2. Listen for Unity save events (ZG_SendSaveData jslib) ──────────────
-  useEffect(() => {
-    const handleSave = async (e) => {
-      const json = e.detail;
-      if (!json) { console.warn('[0G] zg_save event had no data'); return; }
-
-      const activeJwt = jwtRef.current || localStorage.getItem('ZGJwt');
-      if (!activeJwt) { console.warn('[0G] zg_save: no JWT, save skipped'); return; }
-
-      console.log('[0G] Received save from Unity, uploading to backend...');
-      try {
-        const bcsvBuffer = jsonToBCSV(json);
-        const result     = await saveBinary(bcsvBuffer, activeJwt);
-        console.log(`[0G] Save #${result.saveIndex} uploaded. rootHash: ${result.rootHash}`);
-      } catch (err) {
-        console.error('[0G] Frontend save failed:', err.message);
-      }
-    };
-
-    window.addEventListener('zg_save', handleSave);
-    return () => window.removeEventListener('zg_save', handleSave);
-  }, []); // stable — uses jwtRef for latest JWT
-
-  // ── 3. Load Unity ─────────────────────────────────────────────────────────
+  // ── 2. Load Unity ─────────────────────────────────────────────────────────
   useEffect(() => {
     const script = document.createElement('script');
     script.src = `${UNITY_BUILD_URL}/build5/doge.loader.js`;
