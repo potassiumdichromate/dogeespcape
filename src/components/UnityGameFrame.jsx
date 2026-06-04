@@ -37,12 +37,13 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
         console.log('[0G] Unity loaded');
 
         // Send JWT after 3s — gives Unity time to fully initialize all scenes
+        // NOTE: Unity scene GameObject is named 'GameBootstrapper ' (trailing space)
         setTimeout(() => {
           const j = jwtRef.current || localStorage.getItem('ZGJwt') || '';
           console.log('[0G] SendMessage attempt — JWT:', j ? 'present' : 'missing');
           if (j) {
             try {
-              instance.SendMessage('GameBootstrapper', 'SetJwtToken', j);
+              instance.SendMessage('GameBootstrapper ', 'SetJwtToken', j);
               console.log('[0G] JWT sent to GameBootstrapper.SetJwtToken');
             } catch (e) {
               console.warn('[0G] SendMessage failed:', e.message);
@@ -65,7 +66,7 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
   // Re-send JWT to GameBootstrapper if it arrives after Unity loads
   useEffect(() => {
     if (!jwt || !unityInstanceRef.current || isLoading) return;
-    try { unityInstanceRef.current.SendMessage('GameBootstrapper', 'SetJwtToken', jwt); }
+    try { unityInstanceRef.current.SendMessage('GameBootstrapper ', 'SetJwtToken', jwt); }
     catch (e) {}
   }, [jwt, isLoading]);
 
