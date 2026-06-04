@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import fullHero from "../assets/full-hero.png";
 import dogeEscapeLogo from "../assets/DogeEscape-logo.png";
 import dogeosHeadMove from "../assets/dogeos_head_move.gif";
@@ -797,17 +797,19 @@ function TrailerModal({ onClose }) {
 
 function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { connectWallet, isConnecting, isConnected } = useWallet();
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [waitingForWallet, setWaitingForWallet] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const returnTo = location.state?.returnTo || "/Home";
 
   useEffect(() => {
     if (isConnected) {
       setWaitingForWallet(false);
-      navigate("/Home");
+      navigate(returnTo, { replace: true });
     }
-  }, [isConnected, navigate]);
+  }, [isConnected, navigate, returnTo]);
 
   useEffect(() => {
     const updateScrollProgress = () => {
@@ -836,7 +838,7 @@ function LandingPage() {
     try {
       const account = await connectWallet();
       if (account) {
-        navigate("/Home");
+        navigate(returnTo, { replace: true });
       } else {
         window.setTimeout(() => setWaitingForWallet(false), 350);
       }

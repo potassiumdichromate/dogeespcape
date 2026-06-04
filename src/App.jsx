@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { WalletConnectProvider as DogeOSConnectProvider } from '@dogeos/dogeos-sdk';
 import { WalletProvider, useWallet } from './context/WalletContext';
 import { GameProvider } from './context/GameContext';
@@ -104,13 +104,14 @@ const InitialLoadingScreenDismissal = () => {
 // Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
   const { isConnected, isInitializing } = useWallet();
+  const location = useLocation();
 
   if (isInitializing) {
     return null; // Don't redirect while checking connection
   }
 
   if (!isConnected) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" replace state={{ returnTo: location.pathname }} />;
   }
 
   return children;

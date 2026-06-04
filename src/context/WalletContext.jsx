@@ -36,18 +36,34 @@ export const WalletProvider = ({ children }) => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    setIsInitializing(false);
-  }, []);
+    if (typeof window === 'undefined') {
+      setIsInitializing(false);
+      return undefined;
+    }
+
+    const hasSavedWallet = Boolean(localStorage.getItem('doge_wallet_address'));
+
+    if (!hasSavedWallet || address || isConnected) {
+      setIsInitializing(false);
+      return undefined;
+    }
+
+    const reconnectGraceTimer = window.setTimeout(() => {
+      setIsInitializing(false);
+    }, 3000);
+
+    return () => window.clearTimeout(reconnectGraceTimer);
+  }, [address, isConnected]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     if (address) {
       localStorage.setItem('doge_wallet_address', address);
-    } else if (!isConnected) {
+    } else if (!isConnected && !isInitializing) {
       localStorage.removeItem('doge_wallet_address');
     }
-  }, [address, isConnected]);
+  }, [address, isConnected, isInitializing]);
 
   const connectWallet = useCallback(async () => {
     if (isConnected && address) {
