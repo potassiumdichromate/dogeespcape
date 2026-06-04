@@ -20,6 +20,21 @@ export function getCachedJwt() {
   }
 }
 
+/** Returns cached JWT only if it belongs to the given wallet address */
+export function getJwtForWallet(wallet) {
+  try {
+    const token = localStorage.getItem(JWT_KEY);
+    if (!token || !wallet) return null;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (Date.now() >= payload.exp * 1000 - 5 * 60 * 1000) return null;
+    const tokenWallet  = (payload.wallet || '').toLowerCase();
+    const inputWallet  = wallet.toLowerCase();
+    return tokenWallet === inputWallet ? token : null;
+  } catch {
+    return null;
+  }
+}
+
 export function clearJwt() {
   localStorage.removeItem(JWT_KEY);
   localStorage.removeItem(WALLET_KEY);

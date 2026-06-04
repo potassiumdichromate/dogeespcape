@@ -2,9 +2,11 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { useWallet } from './WalletContext';
 import {
   getCachedJwt,
+  getJwtForWallet,
   getNonce,
   login,
   walletLogin,
+  clearJwt,
   loadBinary,
   deserializeBCSV,
   getDecentralizedLeaderboard,
@@ -73,6 +75,7 @@ export const GameProvider = ({ children }) => {
   const [jwt,         setJwt]         = useState(() => getCachedJwt());
   const [authLoading, setAuthLoading] = useState(false);
   const authAttempted = useRef(false);
+  const prevAccount   = useRef(null);   // track wallet switches
 
   // ── Identity ───────────────────────────────────────────────────────────────
   const [username, setUsernameState] = useState('Doge Pilot');
@@ -209,30 +212,48 @@ export const GameProvider = ({ children }) => {
     throw new Error('No signing method available. Is your wallet unlocked?');
   }, [account, currentProvider, signMessage]);
 
-  // ── AUTO-SIWE ──────────────────────────────────────────────────────────────
-  // Runs once when wallet connects. Signs automatically so Unity gets a JWT.
+  // ── AUTO-AUTH ──────────────────────────────────────────────────────────────
+  // Fires when account connects OR changes (wallet switch).
+  // Uses wallet-specific JWT check so different wallets never share tokens.
 
   useEffect(() => {
+    // Wallet switched or logged out
+    if (account !== prevAccount.current) {
+      prevAccount.current = account;
+      authAttempted.current = false;   // reset so new wallet can authenticate
+
+      if (!account) {
+        // Logged out — clear JWT and reset all stats
+        clearJwt();
+        setJwt(null);
+        setCoins(0); setHighscore(0); setLevel(0);
+        setTotalKills(0); setGamesPlayed(0); setGamesWon(0);
+        setGamesLost(0); setTotalCoinsEarned(0);
+        setSaveLoaded(false);
+        return;
+      }
+    }
+
     if (!account) return;
 
     // Always refresh leaderboard (public)
     loadLeaderboard();
 
-    // Check for valid cached JWT first
-    const cached = getCachedJwt();
+    // Check for valid cached JWT that belongs to THIS wallet
+    const cached = getJwtForWallet(account);
     if (cached) {
-      console.log('[0G] JWT cached — loading save');
+      console.log('[0G] JWT cached for this wallet — loading save');
       setJwt(cached);
       loadSaveFromBackend(cached);
       return;
     }
 
-    // Avoid double-sign in React StrictMode or re-renders
+    // Avoid double-sign
     if (authAttempted.current) return;
     authAttempted.current = true;
 
     if (!isEvmAddress(account) && !isDogeAddress(account)) {
-      console.warn('[0G] Unrecognized address format, skipping SIWE:', account);
+      console.warn('[0G] Unrecognized address format, skipping auth:', account);
       return;
     }
 
@@ -243,8 +264,8 @@ export const GameProvider = ({ children }) => {
         let token;
 
         if (isDogeAddress(account)) {
-          // DogeOS / Dogecoin wallet — no signature needed, use wallet address directly
-          console.log('[0G] DogeOS wallet — using wallet-login (no signature)');
+          // DogeOS / Dogecoin wallet — no signature needed
+          console.log('[0G] DogeOS wallet — using wallet-login');
           const result = await walletLogin(account);
           token = result.token;
         } else {
