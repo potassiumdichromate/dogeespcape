@@ -38,7 +38,7 @@ const ProfilePage = () => {
   const [selectedInventoryType, setSelectedInventoryType] = useState(null);
 
   useEffect(() => {
-    console.log("HELLO RJ");
+
     refreshSave();
   }, [refreshSave]);
 
