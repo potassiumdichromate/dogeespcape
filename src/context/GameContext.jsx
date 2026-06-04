@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { useWallet } from './WalletContext';
 import {
   getCachedJwt,
-  authenticate,
+  getNonce,
+  login,
   loadBinary,
   deserializeBCSV,
   getDecentralizedLeaderboard,
@@ -47,15 +48,30 @@ const FALLBACK_LEADERBOARD = [
   { rank: 3, username: 'BlockHunter', score: 0, avatar: '/images/doge_avatar.png' },
 ];
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function isEvmAddress(addr)  { return /^0x[0-9a-fA-F]{40}$/.test(addr); }
+function isDogeAddress(addr) { return /^[DA][1-9A-HJ-NP-Za-km-z]{24,33}$/.test(addr); }
+
+/** Extract plain string from whatever signMessage returns (string | object) */
+function extractSignature(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'string') return raw;
+  // DogeOS / some wallets return { signature: '...' }
+  if (raw.signature) return raw.signature;
+  if (raw.sig)       return raw.sig;
+  return String(raw);
+}
+
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 export const GameProvider = ({ children }) => {
-  const { account, signMessage } = useWallet();
+  const { account, signMessage, currentProvider } = useWallet();
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   const [jwt,         setJwt]         = useState(() => getCachedJwt());
   const [authLoading, setAuthLoading] = useState(false);
-  const authAttempted = useRef(false);   // don't re-attempt in same session
+  const authAttempted = useRef(false);
 
   // ── Identity ───────────────────────────────────────────────────────────────
   const [username, setUsernameState] = useState('Doge Pilot');
@@ -77,7 +93,6 @@ export const GameProvider = ({ children }) => {
   const [boats,      setBoats]      = useState(DUMMY_BOATS);
   const [companions, setCompanions] = useState(DUMMY_COMPANIONS);
   const [guns,       setGuns]       = useState(DUMMY_GUNS);
-
   const [selectedBoat,      setSelectedBoat]      = useState(DUMMY_BOATS[0]);
   const [selectedCompanion, setSelectedCompanion] = useState(DUMMY_COMPANIONS[0]);
   const [selectedGun,       setSelectedGun]       = useState(DUMMY_GUNS[0]);
@@ -91,26 +106,21 @@ export const GameProvider = ({ children }) => {
   ]);
 
   // ── Username persistence ───────────────────────────────────────────────────
-  const getUsernameKey = (addr) =>
-    addr ? `dogeescape_username_${addr.toLowerCase()}` : null;
-
   useEffect(() => {
-    const key = getUsernameKey(account);
-    if (!key) return;
-    const saved = window.localStorage.getItem(key);
+    if (!account) return;
+    const key = `dogeescape_username_${account.toLowerCase()}`;
+    const saved = localStorage.getItem(key);
     if (saved) setUsernameState(saved);
   }, [account]);
 
   const setUsername = useCallback((next) => {
     const clean = next.trim();
-    if (!clean) return;
+    if (!clean || !account) return;
     setUsernameState(clean);
-    const key = getUsernameKey(account);
-    if (key) window.localStorage.setItem(key, clean);
+    localStorage.setItem(`dogeescape_username_${account.toLowerCase()}`, clean);
   }, [account]);
 
-  // ── Load save from backend ─────────────────────────────────────────────────
-
+  // ── BCSV apply ─────────────────────────────────────────────────────────────
   const applyBCSV = useCallback((data) => {
     if (!data) return;
     if (data.coins            !== undefined) setCoins(data.coins);
@@ -122,184 +132,188 @@ export const GameProvider = ({ children }) => {
     if (data.gamesLost        !== undefined) setGamesLost(data.gamesLost);
     if (data.totalCoinsEarned !== undefined) setTotalCoinsEarned(data.totalCoinsEarned);
     setSaveLoaded(true);
-    console.log('[0G] Save loaded into GameContext:', data);
+    console.log('[0G] Save applied:', data);
   }, []);
 
+  // ── Load save ──────────────────────────────────────────────────────────────
   const loadSaveFromBackend = useCallback(async (token) => {
     const activeJwt = token || getCachedJwt();
-    if (!activeJwt) {
-      console.warn('[0G] loadSaveFromBackend: no JWT available');
-      return;
-    }
+    if (!activeJwt) { console.warn('[0G] No JWT for load'); return; }
     setSaveLoading(true);
     try {
       const { buffer } = await loadBinary(activeJwt);
       const data = deserializeBCSV(buffer);
       if (data) applyBCSV(data);
-      else console.warn('[0G] BCSV deserialization returned null');
+      else console.warn('[0G] BCSV parse returned null');
     } catch (err) {
-      if (!err.message?.includes('404')) {
-        console.warn('[0G] Load save failed:', err.message);
-      } else {
-        console.log('[0G] No save on server yet — fresh start.');
-      }
+      if (!err.message?.includes('404')) console.warn('[0G] Load failed:', err.message);
+      else console.log('[0G] No save yet — fresh start');
     } finally {
       setSaveLoading(false);
     }
   }, [applyBCSV]);
 
   // ── Load leaderboard ───────────────────────────────────────────────────────
-
   const loadLeaderboard = useCallback(async () => {
     try {
       const { leaderboard: rows } = await getDecentralizedLeaderboard();
       if (!rows?.length) return;
       setLeaderboard(rows.map(e => ({
-        rank:          e.rank,
-        username:      e.displayName || `Pilot_${e.walletAddress?.slice(2, 8)}`,
-        score:         e.coinSnapshot ?? 0,
-        wins:          e.gamesWon ?? e.saveIndex ?? 0,
-        avatar:        '/images/doge_avatar.png',
-        delta:         '—',
+        rank: e.rank,
+        username: e.displayName || `Pilot_${e.walletAddress?.slice(2, 8)}`,
+        score: e.coinSnapshot ?? 0,
+        wins:  e.gamesWon ?? e.saveIndex ?? 0,
+        avatar: '/images/doge_avatar.png',
+        delta: '—',
         walletAddress: e.walletAddress,
       })));
     } catch (err) {
-      console.warn('[0G] Leaderboard load failed:', err.message);
+      console.warn('[0G] Leaderboard failed:', err.message);
     }
   }, []);
 
-  // ── AUTO-SIWE: fires once per session when wallet connects ─────────────────
-  //
-  // Flow:
-  //   1. Wallet connects → account becomes non-null
-  //   2. Check if JWT already cached and valid → if yes, skip signing
-  //   3. If no JWT → call authenticate() → wallet shows sign popup once
-  //   4. JWT stored in localStorage → load save from backend
-  //   5. Leaderboard loads regardless (public endpoint)
+  // ── SIWE sign helper ───────────────────────────────────────────────────────
+  // Tries multiple signing methods to handle both EVM and Dogecoin wallets.
+  const doSign = useCallback(async (message) => {
+    console.log('[0G] Attempting to sign message...');
+
+    // 1. Try EVM provider.request (most standard — works with MetaMask, WalletConnect, etc.)
+    if (currentProvider?.request) {
+      try {
+        const raw = await currentProvider.request({
+          method: 'personal_sign',
+          params: [message, account],
+        });
+        const sig = extractSignature(raw);
+        if (sig) { console.log('[0G] Signed via provider.request'); return sig; }
+      } catch (e) {
+        console.warn('[0G] provider.request failed:', e.message);
+      }
+    }
+
+    // 2. Try DogeOS signMessage (covers Dogecoin / MyDoge wallet)
+    if (typeof signMessage === 'function') {
+      try {
+        const raw = await signMessage(message);
+        const sig = extractSignature(raw);
+        if (sig) { console.log('[0G] Signed via DogeOS signMessage'); return sig; }
+      } catch (e) {
+        console.warn('[0G] signMessage failed:', e.message);
+      }
+    }
+
+    throw new Error('No signing method succeeded. Is your wallet unlocked?');
+  }, [account, currentProvider, signMessage]);
+
+  // ── AUTO-SIWE ──────────────────────────────────────────────────────────────
+  // Runs once when wallet connects. Signs automatically so Unity gets a JWT.
 
   useEffect(() => {
     if (!account) return;
 
-    // Always load public leaderboard
+    // Always refresh leaderboard (public)
     loadLeaderboard();
 
+    // Check for valid cached JWT first
     const cached = getCachedJwt();
-
     if (cached) {
-      // Already authenticated — just load the save
-      console.log('[0G] Valid JWT found in cache — loading save.');
+      console.log('[0G] JWT cached — loading save');
       setJwt(cached);
       loadSaveFromBackend(cached);
       return;
     }
 
-    // No JWT — auto-sign once per session
+    // Avoid double-sign in React StrictMode or re-renders
     if (authAttempted.current) return;
     authAttempted.current = true;
 
-    console.log('[0G] No JWT found — triggering SIWE for wallet:', account);
+    if (!isEvmAddress(account) && !isDogeAddress(account)) {
+      console.warn('[0G] Unrecognized address format, skipping SIWE:', account);
+      return;
+    }
+
+    console.log('[0G] Starting SIWE for:', account);
     setAuthLoading(true);
 
-    authenticate(account, async (msg) => {
-      console.log('[0G] Requesting wallet signature...');
-      return await signMessage(msg);
-    })
-      .then(token => {
-        if (token) {
-          console.log('[0G] SIWE success — JWT stored. Loading save...');
-          setJwt(token);
-          // Also store wallet for Unity URL injection
-          const isEvm = /^0x[0-9a-fA-F]{40}$/.test(account);
-          localStorage.setItem(WALLET_KEY, isEvm ? account.toLowerCase() : account);
-          loadSaveFromBackend(token);
-        } else {
-          console.warn('[0G] SIWE returned no token — running without cloud saves.');
-        }
-      })
-      .catch(err => {
-        console.warn('[0G] SIWE failed:', err.message, '— running offline.');
-      })
-      .finally(() => {
+    (async () => {
+      try {
+        const { message, nonce } = await getNonce(account);
+        console.log('[0G] Nonce received:', nonce);
+
+        const signature = await doSign(message);
+        console.log('[0G] Signature obtained');
+
+        const { token } = await login(account, signature, nonce);
+        console.log('[0G] JWT received');
+
+        // Persist
+        const stored = isEvmAddress(account) ? account.toLowerCase() : account;
+        localStorage.setItem(JWT_KEY,    token);
+        localStorage.setItem(WALLET_KEY, stored);
+
+        setJwt(token);
+        loadSaveFromBackend(token);
+      } catch (err) {
+        console.error('[0G] SIWE failed:', err.message);
+        authAttempted.current = false; // allow retry if user refreshes
+      } finally {
         setAuthLoading(false);
-      });
+      }
+    })();
 
   }, [account]); // eslint-disable-line react-hooks/exhaustive-deps
-  // ^ intentionally omitting signMessage/loadSaveFromBackend/loadLeaderboard
-  //   to avoid re-triggering on every render — they are stable refs
 
   // ── Manual refresh ─────────────────────────────────────────────────────────
-
   const refreshSave = useCallback(() => {
     loadSaveFromBackend();
     loadLeaderboard();
   }, [loadSaveFromBackend, loadLeaderboard]);
 
-  // ── Marketplace actions ────────────────────────────────────────────────────
-
+  // ── Marketplace ────────────────────────────────────────────────────────────
   const buyItem = useCallback((itemType, itemId) => {
     const map = { boat: [boats, setBoats], companion: [companions, setCompanions], gun: [guns, setGuns] };
     if (!map[itemType]) return;
     const [items, setItems] = map[itemType];
     const item = items.find(i => i.id === itemId);
-    if (!item || item.owned) return;
-    if (coins >= item.price) {
-      setCoins(c => c - item.price);
-      setItems(items.map(i => i.id === itemId ? { ...i, owned: true } : i));
-      return true;
-    }
-    return false;
+    if (!item || item.owned || coins < item.price) return false;
+    setCoins(c => c - item.price);
+    setItems(items.map(i => i.id === itemId ? { ...i, owned: true } : i));
+    return true;
   }, [boats, companions, guns, coins]);
 
   const rentItem = useCallback((itemType, itemId) => {
     const map = { boat: boats, companion: companions, gun: guns };
     const item = map[itemType]?.find(i => i.id === itemId);
-    if (!item) return;
-    if (coins >= item.rentPrice) {
-      setCoins(c => c - item.rentPrice);
-      return true;
-    }
-    return false;
+    if (!item || coins < item.rentPrice) return false;
+    setCoins(c => c - item.rentPrice);
+    return true;
   }, [boats, companions, guns, coins]);
 
-  const addCoins     = useCallback((amount) => setCoins(c => c + amount), []);
+  const addCoins        = useCallback((n) => setCoins(c => c + n), []);
   const updateHighscore = useCallback((n) => setHighscore(h => n > h ? n : h), []);
 
   const sendGlobalMessage = useCallback((message) => {
-    setChatMessages(prev => [
-      ...prev,
-      { id: prev.length + 1, username, message, timestamp: new Date() }
-    ]);
+    setChatMessages(prev => [...prev, { id: prev.length + 1, username, message, timestamp: new Date() }]);
   }, [username]);
 
   const completeTask = useCallback((taskId) => {
-    setDailyTasks(tasks =>
-      tasks.map(t => t.id === taskId ? { ...t, completed: true, progress: t.target } : t)
-    );
+    setDailyTasks(t => t.map(task => task.id === taskId ? { ...task, completed: true, progress: task.target } : task));
   }, []);
 
   const winRate = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0;
 
   return (
     <GameContext.Provider value={{
-      // Auth
       jwt, authLoading,
-
-      // Identity
       username, setUsername, avatar, setAvatar,
-
-      // Save data (from 0G backend)
       coins, highscore, level,
       totalKills, gamesPlayed, gamesWon, gamesLost,
       totalCoinsEarned, winRate,
       saveLoading, saveLoaded, refreshSave,
-
-      // Marketplace
       boats, companions, guns,
       selectedBoat, selectedCompanion, selectedGun,
       setSelectedBoat, setSelectedCompanion, setSelectedGun,
       buyItem, rentItem, addCoins, updateHighscore,
-
-      // Social
       leaderboard, dailyTasks, chatMessages,
       sendGlobalMessage, completeTask,
     }}>

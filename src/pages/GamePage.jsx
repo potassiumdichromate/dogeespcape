@@ -5,10 +5,18 @@ import UnityGameFrame from '../components/UnityGameFrame';
 import LeaderboardPanel from '../components/LeaderboardPanel';
 import DailyTasksPanel from '../components/DailyTasksPanel';
 import { useGame } from '../context/GameContext';
+import { useWallet } from '../context/WalletContext';
+import { WALLET_KEY } from '../api/zerog';
 
 const GamePage = () => {
   const [isGameExpanded, setIsGameExpanded] = useState(false);
   const { jwt, authLoading } = useGame();
+  const { address } = useWallet();
+
+  // Wallet address for Unity — normalised the same way it was stored
+  const walletAddress = address
+    ? (/^0x[0-9a-fA-F]{40}$/.test(address) ? address.toLowerCase() : address)
+    : localStorage.getItem(WALLET_KEY) || '';
 
   return (
     <div
@@ -33,19 +41,13 @@ const GamePage = () => {
               : 'flex flex-col lg:grid lg:grid-cols-[260px_1fr_260px] gap-3 mt-3 md:mt-4 pb-6 lg:pb-0'
           }`}
         >
-          {/* Left: Leaderboard */}
           {!isGameExpanded && (
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="hidden lg:block min-h-0"
-            >
+            <motion.div initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="hidden lg:block min-h-0">
               <LeaderboardPanel />
             </motion.div>
           )}
 
-          {/* Center: Game — only mount Unity once JWT is in localStorage */}
+          {/* Center — show SIWE spinner while signing, then Unity */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -55,41 +57,31 @@ const GamePage = () => {
             }`}
           >
             {authLoading ? (
-              // Waiting for SIWE signature before loading Unity
               <div className="flex flex-col items-center justify-center gap-4 text-center w-full aspect-[16/10] max-w-[960px] bg-doge-coal rounded-lg">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
                   className="w-10 h-10 border-4 border-doge-gold/30 border-t-doge-gold rounded-full"
                 />
-                <p className="text-doge-gold font-heading text-sm">
-                  Sign the wallet message to enable cloud saves…
-                </p>
-                <p className="text-doge-iron text-xs">
-                  Check your wallet — a signature request is waiting
-                </p>
+                <p className="text-doge-gold font-heading text-sm">Authenticating wallet…</p>
+                <p className="text-doge-iron text-xs">Check your wallet — a one-time signature is required</p>
               </div>
             ) : (
               <UnityGameFrame
                 isExpanded={isGameExpanded}
-                onToggleExpanded={() => setIsGameExpanded(current => !current)}
+                onToggleExpanded={() => setIsGameExpanded(c => !c)}
+                jwt={jwt}
+                walletAddress={walletAddress}
               />
             )}
           </motion.div>
 
-          {/* Right: Daily Tasks */}
           {!isGameExpanded && (
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="hidden lg:block min-h-0"
-            >
+            <motion.div initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="hidden lg:block min-h-0">
               <DailyTasksPanel />
             </motion.div>
           )}
 
-          {/* Mobile panels */}
           {!isGameExpanded && (
             <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="min-h-[280px]"><LeaderboardPanel /></div>
