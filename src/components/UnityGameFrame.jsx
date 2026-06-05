@@ -103,6 +103,19 @@ const UnityGameFrame = ({ isExpanded = false, onToggleExpanded, jwt, walletAddre
           </div>
         </motion.div>
       )}
+      {isExpanded && (
+        <div className="mobile-rotate-overlay" aria-live="polite">
+          <div className="mobile-rotate-backdrop" aria-hidden="true" />
+          <div className="mobile-rotate-content">
+            <div className="mobile-rotate-phone" aria-hidden="true">
+              <span />
+              <i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i />
+            </div>
+            <h2>Rotate Your Device</h2>
+            <p>Please rotate your device to landscape mode for the best gaming experience.</p>
+          </div>
+        </div>
+      )}
       <canvas id="unity-canvas" width="1152" height="720"
         style={{ display: 'block', width: '100%', height: '100%' }} />
     </div>

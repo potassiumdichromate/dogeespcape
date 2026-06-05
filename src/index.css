@@ -2712,6 +2712,128 @@
     transform: rotate(45deg);
   }
 
+  .mobile-rotate-overlay {
+    display: none;
+  }
+
+  @media (max-width: 767px) and (orientation: portrait) {
+    .mobile-rotate-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.72);
+      color: #ffffff;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .mobile-rotate-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.78)),
+        url('/images/DogeEscape-logo.png') center 18% / min(82vw, 430px) auto no-repeat,
+        url('/images/hero-gameplay-screenshot.png') center bottom / cover no-repeat;
+      filter: blur(3px);
+      opacity: 0.58;
+      transform: scale(1.03);
+    }
+
+    .mobile-rotate-content {
+      position: relative;
+      z-index: 1;
+      width: min(82vw, 380px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      transform: translateY(-2vh);
+    }
+
+    .mobile-rotate-phone {
+      position: relative;
+      width: 54px;
+      height: 82px;
+      border: 4px solid rgba(245, 245, 245, 0.86);
+      border-radius: 10px;
+      background: #0a0d10;
+      box-shadow:
+        0 0 0 2px rgba(0, 0, 0, 0.42),
+        0 12px 24px rgba(0, 0, 0, 0.46);
+      animation: mobileRotatePhoneSway 1.9s ease-in-out infinite;
+    }
+
+    .mobile-rotate-phone span {
+      position: absolute;
+      left: 50%;
+      bottom: 6px;
+      width: 18px;
+      height: 4px;
+      border-radius: 999px;
+      background: #d8e4ee;
+      transform: translateX(-50%);
+    }
+
+    .mobile-rotate-phone i {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: #2fd1ff;
+      box-shadow: 0 0 7px rgba(47, 209, 255, 0.4);
+    }
+
+    .mobile-rotate-phone i:nth-of-type(1) { left: 11px; top: 16px; background: #2fd1ff; }
+    .mobile-rotate-phone i:nth-of-type(2) { left: 23px; top: 16px; background: #ffd447; }
+    .mobile-rotate-phone i:nth-of-type(3) { left: 35px; top: 16px; background: #fb6f4f; }
+    .mobile-rotate-phone i:nth-of-type(4) { left: 11px; top: 28px; background: #21d59b; }
+    .mobile-rotate-phone i:nth-of-type(5) { left: 23px; top: 28px; background: #2fd1ff; }
+    .mobile-rotate-phone i:nth-of-type(6) { left: 35px; top: 28px; background: #ff5fd2; }
+    .mobile-rotate-phone i:nth-of-type(7) { left: 11px; top: 40px; background: #ffd447; }
+    .mobile-rotate-phone i:nth-of-type(8) { left: 23px; top: 40px; background: #fb6f4f; }
+    .mobile-rotate-phone i:nth-of-type(9) { left: 35px; top: 40px; background: #2fd1ff; }
+    .mobile-rotate-phone i:nth-of-type(10) { left: 11px; top: 56px; background: #2fd1ff; }
+    .mobile-rotate-phone i:nth-of-type(11) { left: 23px; top: 56px; background: #ff5fd2; }
+    .mobile-rotate-phone i:nth-of-type(12) { left: 35px; top: 56px; background: #21d59b; }
+
+    .mobile-rotate-content h2 {
+      margin: 8px 0 0;
+      font-family: "Silkscreen", "Pixelify Sans", cursive;
+      font-size: clamp(24px, 7.4vw, 36px);
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+      text-shadow: 0 3px 0 rgba(0, 0, 0, 0.46);
+    }
+
+    .mobile-rotate-content p {
+      margin: 0;
+      max-width: 330px;
+      font-family: "Silkscreen", "Pixelify Sans", cursive;
+      font-size: clamp(15px, 4.5vw, 21px);
+      line-height: 1.48;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.88);
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.42);
+    }
+
+    @keyframes mobileRotatePhoneSway {
+      0%,
+      100% {
+        transform: translateX(-10px) rotate(39deg);
+      }
+
+      50% {
+        transform: translateX(10px) rotate(47deg);
+      }
+    }
+  }
+
   .unity-status-strip {
     position: absolute;
     left: 0;
