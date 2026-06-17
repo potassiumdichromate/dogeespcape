@@ -1,7 +1,15 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useAccount, useWalletConnect } from '@dogeos/dogeos-sdk';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useAccount, useWalletConnect, getChains } from '@dogeos/dogeos-sdk';
 
 const WalletContext = createContext();
+
+// DogeOS Chikyū Testnet — make this the default network on connect
+// instead of Ethereum mainnet (eip155:1).
+const DEFAULT_CHAIN_TYPE = 'evm';
+const DEFAULT_CHAIN_NUMERIC_ID = '6281971';
+// chainId is reported as CAIP form ("eip155:6281971") by useAccount but as a
+// bare numeric id ("6281971") by getChains(), so compare on the numeric tail.
+const numericChainId = (value) => String(value ?? '').match(/(\d+)$/)?.[1];
 
 export const useWallet = () => {
   const context = useContext(WalletContext);
@@ -34,6 +42,40 @@ export const WalletProvider = ({ children }) => {
     closeModal,
   } = useWalletConnect();
   const [isInitializing, setIsInitializing] = useState(true);
+  const defaultChainAttemptedRef = useRef(false);
+
+  // After connecting, default the session to DogeOS Chikyū Testnet instead of
+  // whatever the wallet picks (Ethereum mainnet). Only attempt once per
+  // connection so a user who declines the switch isn't re-prompted in a loop.
+  useEffect(() => {
+    if (!isConnected || !address || !chainId) {
+      defaultChainAttemptedRef.current = false;
+      return;
+    }
+
+    if (numericChainId(chainId) === DEFAULT_CHAIN_NUMERIC_ID || defaultChainAttemptedRef.current) {
+      return;
+    }
+
+    defaultChainAttemptedRef.current = true;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const chains = await getChains();
+        const evmChains = chains?.[DEFAULT_CHAIN_TYPE] || [];
+        const target = evmChains.find((c) => numericChainId(c.id) === DEFAULT_CHAIN_NUMERIC_ID);
+        if (cancelled || !target) return;
+        await switchChain({ chainType: DEFAULT_CHAIN_TYPE, chainInfo: target });
+      } catch (err) {
+        console.warn('Failed to switch to DogeOS Chikyū Testnet by default:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isConnected, address, chainId, switchChain]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
