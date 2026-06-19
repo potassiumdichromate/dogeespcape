@@ -3,12 +3,14 @@ import { useAccount, useWalletConnect, getChains } from '@dogeos/dogeos-sdk';
 
 const WalletContext = createContext();
 
-// DogeOS Chikyū Testnet — make this the default network on connect
-// instead of Ethereum mainnet (eip155:1).
-const DEFAULT_CHAIN_TYPE = 'evm';
-const DEFAULT_CHAIN_NUMERIC_ID = '6281971';
-// chainId is reported as CAIP form ("eip155:6281971") by useAccount but as a
-// bare numeric id ("6281971") by getChains(), so compare on the numeric tail.
+// EVM-only wallets (e.g. MetaMask) can't connect to Dogecoin L1, so default
+// them to DogeOS Chikyū Testnet (eip155:6281971) instead of Ethereum.
+// Dogecoin-capable wallets default to Dogecoin L1 via defaultConnectChain and
+// are intentionally left untouched here.
+const DOGEOS_TESTNET_CHAIN_TYPE = 'evm';
+const DOGEOS_TESTNET_NUMERIC_ID = '6281971';
+// chainId is CAIP form ("eip155:6281971") from useAccount but a bare numeric id
+// ("6281971") from getChains(), so compare on the numeric tail.
 const numericChainId = (value) => String(value ?? '').match(/(\d+)$/)?.[1];
 
 export const useWallet = () => {
@@ -42,40 +44,41 @@ export const WalletProvider = ({ children }) => {
     closeModal,
   } = useWalletConnect();
   const [isInitializing, setIsInitializing] = useState(true);
-  const defaultChainAttemptedRef = useRef(false);
+  const dogeosSwitchAttemptedRef = useRef(false);
 
-  // After connecting, default the session to DogeOS Chikyū Testnet instead of
-  // whatever the wallet picks (Ethereum mainnet). Only attempt once per
-  // connection so a user who declines the switch isn't re-prompted in a loop.
+  // For EVM-only wallets (e.g. MetaMask) that land on Ethereum, switch to
+  // DogeOS Chikyū Testnet. Gated on chainType === 'evm' so Dogecoin-connected
+  // wallets (which default to Dogecoin L1) are never disturbed. Attempted once
+  // per connection so declining the switch doesn't re-prompt in a loop.
   useEffect(() => {
-    if (!isConnected || !address || !chainId) {
-      defaultChainAttemptedRef.current = false;
+    if (!isConnected || !address || chainType !== DOGEOS_TESTNET_CHAIN_TYPE || !chainId) {
+      dogeosSwitchAttemptedRef.current = false;
       return;
     }
 
-    if (numericChainId(chainId) === DEFAULT_CHAIN_NUMERIC_ID || defaultChainAttemptedRef.current) {
+    if (numericChainId(chainId) === DOGEOS_TESTNET_NUMERIC_ID || dogeosSwitchAttemptedRef.current) {
       return;
     }
 
-    defaultChainAttemptedRef.current = true;
+    dogeosSwitchAttemptedRef.current = true;
 
     let cancelled = false;
     (async () => {
       try {
         const chains = await getChains();
-        const evmChains = chains?.[DEFAULT_CHAIN_TYPE] || [];
-        const target = evmChains.find((c) => numericChainId(c.id) === DEFAULT_CHAIN_NUMERIC_ID);
+        const evmChains = chains?.[DOGEOS_TESTNET_CHAIN_TYPE] || [];
+        const target = evmChains.find((c) => numericChainId(c.id) === DOGEOS_TESTNET_NUMERIC_ID);
         if (cancelled || !target) return;
-        await switchChain({ chainType: DEFAULT_CHAIN_TYPE, chainInfo: target });
+        await switchChain({ chainType: DOGEOS_TESTNET_CHAIN_TYPE, chainInfo: target });
       } catch (err) {
-        console.warn('Failed to switch to DogeOS Chikyū Testnet by default:', err);
+        console.warn('Failed to switch EVM wallet to DogeOS Chikyū Testnet by default:', err);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [isConnected, address, chainId, switchChain]);
+  }, [isConnected, address, chainType, chainId, switchChain]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {

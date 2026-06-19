@@ -34,6 +34,9 @@ const dogeOSConnectors = [
 const dogeOSConfig = {
   clientId: dogeOSClientId,
   connectors: dogeOSConnectors,
+  // Default to Dogecoin (L1) on connect so multi-network wallets (e.g. the
+  // DogeOS Social Wallet) skip the "Select network" chooser.
+  defaultConnectChain: 'dogecoin',
   metadata: {
     name: 'Doge Escape',
     description: 'Race, collect, and trade in the Doge Escape game world.',
