@@ -197,7 +197,7 @@ export const GameProvider = ({ children }) => {
     // DogeOS signMessage — works for both Dogecoin and EVM fallback
     if (typeof signMessage === 'function') {
       try {
-        const raw = await signMessage(message);
+        const raw = await signMessage({ message });
         const sig = extractSignature(raw);
         if (sig) { console.log('[0G] Signed via DogeOS signMessage'); return sig; }
       } catch (e) {

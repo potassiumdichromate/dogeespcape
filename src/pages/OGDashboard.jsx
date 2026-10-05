@@ -183,7 +183,7 @@ export default function OGDashboard() {
     setAuthLoading(true);
     try {
       const token = await authenticate(wallet, async (msg) => {
-        const raw = await signMessage(msg);
+        const raw = await signMessage({ message: msg });
         return typeof raw === 'string' ? raw : (raw?.signature || String(raw));
       });
       if (token) setJwt(token);
