@@ -4,7 +4,6 @@ import {
   getCachedJwt,
   getNonce,
   login,
-  walletLogin,
   loadBinary,
   deserializeBCSV,
   getDecentralizedLeaderboard,
@@ -243,23 +242,14 @@ export const GameProvider = ({ children }) => {
 
     (async () => {
       try {
-        let token;
-
-        if (isDogeAddress(account)) {
-          // DogeOS / Dogecoin wallet — no signature needed
-          console.log('[0G] DogeOS wallet — using wallet-login');
-          const result = await walletLogin(account);
-          token = result.token;
-        } else {
-          // EVM wallet — full SIWE flow
-          console.log('[0G] EVM wallet — starting SIWE for:', account);
-          const { message, nonce } = await getNonce(account);
-          console.log('[0G] Nonce received:', nonce);
-          const signature = await doSign(message);
-          console.log('[0G] Signature obtained');
-          const result = await login(account, signature, nonce);
-          token = result.token;
-        }
+        // Same challenge flow for EVM and Dogecoin wallets: the server issues a
+        // nonce, the wallet signs it, and the server verifies the signature
+        // before creating a session. A connected address alone is not proof
+        // of ownership.
+        console.log('[0G] Starting signed login for:', account);
+        const { message, nonce } = await getNonce(account);
+        const signature = await doSign(message);
+        const { token } = await login(account, signature, nonce);
 
         console.log('[0G] JWT received');
         const stored = isEvmAddress(account) ? account.toLowerCase() : account;
