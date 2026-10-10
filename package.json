@@ -18,11 +18,21 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",
-    "three": "^0.183.2"
+    "three": "^0.183.2",
+    "viem": "2.57.4",
+    "wagmi": "3.7.7"
   },
   "overrides": {
     "@heroui/system": "2.4.23",
-    "@heroui/theme": "2.4.23"
+    "@heroui/theme": "2.4.23",
+    "@dogeos/dogeos-sdk": {
+      "viem": "$viem"
+    }
+  },
+  "resolutions": {
+    "@heroui/system": "2.4.23",
+    "@heroui/theme": "2.4.23",
+    "@dogeos/dogeos-sdk/viem": "2.57.4"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
