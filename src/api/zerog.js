@@ -172,6 +172,21 @@ export async function getDecentralizedLeaderboard() {
   return req('/player/leaderboard/decentralized');
 }
 
+// ── Leaderboard (ranked by high score) ───────────────────────────────────────
+
+export async function getLeaderboard({ page = 1, limit = 50 } = {}) {
+  return req(`/leaderboard?page=${page}&limit=${limit}`);
+}
+
+/** The logged-in player's own leaderboard entry, or null when not ranked yet. */
+export async function getMyRank(jwt) {
+  const res = await fetch(`${BASE}/leaderboard/me`, { headers: authHeaders(jwt) });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`My rank failed: ${res.status}`);
+  const { player } = await res.json();
+  return player;
+}
+
 // ── 0G Dashboard / UX ────────────────────────────────────────────────────────
 
 export async function getDashboard(jwt) {

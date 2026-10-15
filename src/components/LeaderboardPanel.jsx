@@ -1,45 +1,16 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
 const LeaderboardPanel = () => {
-  const { leaderboard } = useGame();
-  const [activeBoard, setActiveBoard] = useState('daily');
+  const { leaderboard, leaderboardStatus } = useGame();
 
-  const allTimeRows = leaderboard.map((player, index) => ({
-    ...player,
-    wins: [342, 310, 276, 241, 220][index] || 100,
-    delta: ['—', '▲', '▼', '—', '▲'][index] || '—',
-  }));
-
-  const weeklyRows = allTimeRows
-    .map((player, index) => ({
-      ...player,
-      score: Math.round(player.score * [0.32, 0.28, 0.24, 0.21, 0.2][index]),
-      wins: Math.max(8, Math.round(player.wins * [0.28, 0.24, 0.22, 0.18, 0.16][index])),
-      delta: ['▲', '—', '▲', '▼', '—'][index],
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((player, index) => ({ ...player, rank: index + 1 }));
-
-  const dailyRows = allTimeRows
-    .map((player, index) => ({
-      ...player,
-      score: Math.round(player.score * [0.08, 0.065, 0.075, 0.055, 0.05][index]),
-      wins: Math.max(1, Math.round(player.wins * [0.06, 0.05, 0.055, 0.04, 0.035][index])),
-      delta: ['▲', '▲', '—', '▼', '▲'][index],
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((player, index) => ({ ...player, rank: index + 1 }));
-
-  const boards = {
-    daily: { label: 'Daily', rows: dailyRows },
-    weekly: { label: 'Weekly', rows: weeklyRows },
-    all: { label: 'All Time', rows: allTimeRows },
-  };
-
-  const activeRows = boards[activeBoard].rows;
+  const activeRows = leaderboard;
   const topRanks = activeRows.slice(0, 3);
+  const emptyMessage = leaderboardStatus === 'loading'
+    ? 'Loading rankings…'
+    : leaderboardStatus === 'error'
+      ? 'Leaderboard unavailable'
+      : 'No ranked players yet';
 
   const getRankColor = (rank) => {
     switch (rank) {
@@ -72,27 +43,15 @@ const LeaderboardPanel = () => {
             className="h-2 w-2 rounded-full bg-doge-gold"
           />
         </div>
-
-        <div className="rank-panel-tabs">
-          {Object.entries(boards).map(([key, board]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setActiveBoard(key)}
-              className={activeBoard === key ? 'active' : ''}
-            >
-              {board.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="rank-top-three">
-        {[topRanks[1], topRanks[0], topRanks[2]].filter(Boolean).map((player) => (
+        {/* Positional slots (2nd, 1st, 3rd); the label shows the real rank, which can repeat on ties */}
+        {[[topRanks[1], 2], [topRanks[0], 1], [topRanks[2], 3]].filter(([player]) => player).map(([player, place]) => (
           <motion.div
-            key={`top-${activeBoard}-${player.rank}-${player.username}`}
+            key={`top-${player.walletAddress}`}
             whileHover={{ y: -2 }}
-            className={`rank-podium-card rank-podium-${player.rank}`}
+            className={`rank-podium-card rank-podium-${place}`}
           >
             <span className="rank-crown">{player.rank === 1 ? '👑' : `#${player.rank}`}</span>
             <div className="rank-podium-avatar">
@@ -110,9 +69,12 @@ const LeaderboardPanel = () => {
 
       {/* Rank List */}
       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2 scrollbar-minecraft">
+        {activeRows.length === 0 && (
+          <p className="text-xs text-center text-doge-iron py-4">{emptyMessage}</p>
+        )}
         {activeRows.map((player, index) => (
           <motion.div
-            key={`${activeBoard}-${player.rank}-${player.username}`}
+            key={player.walletAddress}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.06 }}
@@ -145,15 +107,9 @@ const LeaderboardPanel = () => {
                   {player.username}
                 </h4>
                 <p className="text-[11px] text-doge-emerald">
-                  {player.score.toLocaleString()} pts • {player.wins} wins
+                  {player.score.toLocaleString()} high score • {player.kills.toLocaleString()} kills
                 </p>
               </div>
-
-              <span className={`text-xs font-bold ${
-                player.delta === '▲' ? 'text-doge-emerald' : player.delta === '▼' ? 'text-doge-redstone' : 'text-doge-iron'
-              }`}>
-                {player.delta}
-              </span>
             </div>
 
             {/* Glow effect for top 3 */}
@@ -174,7 +130,7 @@ const LeaderboardPanel = () => {
       {/* Footer Stats */}
       <div className="border-t-2 border-doge-coal p-2 bg-doge-wood bg-opacity-30">
         <div className="flex justify-between text-xs items-center">
-          <span className="text-doge-iron">{boards[activeBoard].label}</span>
+          <span className="text-doge-iron">All Time</span>
           <div>
             <span className="text-doge-gold">{activeRows.length}</span>
             <span className="text-doge-iron"> racers</span>

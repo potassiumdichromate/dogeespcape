@@ -20,7 +20,7 @@ const ProfilePage = () => {
     totalKills,
     totalCoinsEarned,
     winRate,
-    leaderboard,
+    myRank,
     avatar,
     boats,
     companions,
@@ -77,9 +77,8 @@ const ProfilePage = () => {
     { label: 'Level', value: xpRate, color: '#f7c948' },
   ];
 
-  // Rank from real leaderboard
-  const myEntry = leaderboard.find(e => e.walletAddress?.toLowerCase() === account?.toLowerCase());
-  const playerRank = myEntry?.rank ?? '—';
+  // Own rank from /leaderboard/me
+  const playerRank = myRank ?? '—';
 
   // Achievements driven by real save data
   const achievements = [

@@ -1,56 +1,18 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import ProfileHeader from '../components/ProfileHeader';
 import { useGame } from '../context/GameContext';
 import ZkArenaScene from '../components/ZkArenaScene';
 
 const LeaderboardPage = () => {
-  const { leaderboard } = useGame();
-  const [activeBoard, setActiveBoard] = useState('all');
+  const { leaderboard, leaderboardStatus } = useGame();
 
-  const allTimeRows = [
-    ...leaderboard.map((player, index) => ({
-      ...player,
-      wins: [342, 310, 276, 241, 220][index] || 100,
-      level: [87, 82, 75, 71, 68][index] || 50,
-      delta: ['—', '▲', '▼', '—', '▲'][index] || '—',
-    })),
-    { rank: 6, username: 'GoldWake', score: 10900, avatar: '/images/doge_avatar.png', wins: 188, level: 59, delta: '▲' },
-    { rank: 7, username: 'BoatByte', score: 9840, avatar: '/images/doge_avatar.png', wins: 161, level: 52, delta: '—' },
-  ];
-
-  const weeklyRows = allTimeRows
-    .map((player, index) => ({
-      ...player,
-      score: Math.round(player.score * [0.32, 0.28, 0.24, 0.21, 0.2, 0.18, 0.16][index]),
-      wins: Math.max(8, Math.round(player.wins * [0.28, 0.24, 0.22, 0.18, 0.16, 0.14, 0.12][index])),
-      delta: ['▲', '—', '▲', '▼', '—', '▲', '▼'][index],
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((player, index) => ({ ...player, rank: index + 1 }));
-
-  const dailyRows = allTimeRows
-    .map((player, index) => ({
-      ...player,
-      score: Math.round(player.score * [0.08, 0.065, 0.075, 0.055, 0.05, 0.045, 0.04][index]),
-      wins: Math.max(1, Math.round(player.wins * [0.06, 0.05, 0.055, 0.04, 0.035, 0.03, 0.025][index])),
-      delta: ['▲', '▲', '—', '▼', '▲', '—', '▼'][index],
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((player, index) => ({ ...player, rank: index + 1 }));
-
-  const boards = {
-    daily: { label: 'Daily', rows: dailyRows, subtitle: 'Today’s fastest verified racers' },
-    weekly: { label: 'Weekly', rows: weeklyRows, subtitle: 'This week’s race momentum' },
-    all: { label: 'All Time', rows: allTimeRows, subtitle: 'Rankings verified on-chain with zero-knowledge proofs' },
-  };
-
-  const rows = boards[activeBoard].rows;
+  const rows = leaderboard;
   const podium = rows.slice(0, 3);
-  const formatPlayerName = (name) => {
-    if (name.length <= 10) return name;
-    return `${name.slice(0, 3)}....${name.slice(-2)}`;
-  };
+  const emptyMessage = leaderboardStatus === 'loading'
+    ? 'Loading rankings…'
+    : leaderboardStatus === 'error'
+      ? 'Could not load the leaderboard. Please try again later.'
+      : 'No ranked players yet.';
 
   return (
     <div className="screen-page leaderboard-screen min-h-screen bg-doge-darker p-3 md:p-4 lg:p-6 relative overflow-x-hidden">
@@ -60,19 +22,7 @@ const LeaderboardPage = () => {
 
         <section className="leaderboard-hero-copy">
           <h1>ZK-Proof Leaderboard</h1>
-          <p>{boards[activeBoard].subtitle}</p>
-          <div className="leaderboard-filters">
-            {Object.entries(boards).map(([key, board]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setActiveBoard(key)}
-                className={activeBoard === key ? 'active' : ''}
-              >
-                {board.label}
-              </button>
-            ))}
-          </div>
+          <p>Top pilots ranked by high score</p>
         </section>
 
         <motion.main
@@ -80,38 +30,43 @@ const LeaderboardPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="leaderboard-page-body"
         >
-          <section className="podium-stage">
-            {[podium[1], podium[0], podium[2]].map((player, index) => {
-              const place = [2, 1, 3][index];
-              return (
-                <div key={`${activeBoard}-${player.username}`} className={`podium-player podium-${place}`}>
-                  <div className="podium-medal"> {place}</div>
+          {podium.length > 0 && (
+            <section className="podium-stage">
+              {/* Podium slots are positional (2nd, 1st, 3rd); labels show the real rank, which can repeat on ties */}
+              {[[podium[1], 2], [podium[0], 1], [podium[2], 3]].filter(([player]) => player).map(([player, place]) => (
+                <div key={`podium-${player.walletAddress}`} className={`podium-player podium-${place}`}>
+                  <div className="podium-medal"> {player.rank}</div>
                   <div className="podium-avatar">
-                    {player.avatar?.startsWith('/') ? <img src={player.avatar} alt={player.username} /> : player.avatar}
+                    <img src={player.avatar} alt={player.username} />
                   </div>
                   <strong>{player.username}</strong>
-                  <span>{player.score.toLocaleString()} pts</span>
-                  <div className="podium-block">#{place}</div>
+                  <span>{player.score.toLocaleString()} high score</span>
+                  <div className="podium-block">#{player.rank}</div>
                 </div>
-              );
-            })}
-          </section>
+              ))}
+            </section>
+          )}
 
           <section className="rank-table">
             <div className="rank-table-head">
               <span>Rank</span>
               <span>Player</span>
-              <span>Score</span>
+              <span>High Score</span>
+              <span>Kills</span>
             </div>
             <div className="rank-table-scroll scrollbar-minecraft">
+              {rows.length === 0 && (
+                <p className="rank-table-empty">{emptyMessage}</p>
+              )}
               {rows.map((player) => (
-                <div key={`${activeBoard}-${player.rank}-${player.username}`} className="rank-table-row">
+                <div key={player.walletAddress} className="rank-table-row">
                   <strong>#{player.rank}</strong>
                   <div>
-                    {player.avatar?.startsWith('/') ? <img src={player.avatar} alt={player.username} /> : <span>{player.avatar}</span>}
-                    <b title={player.username}>{formatPlayerName(player.username)}</b>
+                    <img src={player.avatar} alt={player.username} />
+                    <b title={player.walletAddress}>{player.username}</b>
                   </div>
                   <span>{player.score.toLocaleString()}</span>
+                  <span>{player.kills.toLocaleString()}</span>
                 </div>
               ))}
             </div>

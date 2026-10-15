@@ -6,7 +6,8 @@ import {
   login,
   loadBinary,
   deserializeBCSV,
-  getDecentralizedLeaderboard,
+  getLeaderboard,
+  getMyRank,
   JWT_KEY,
   WALLET_KEY,
 } from '../api/zerog';
@@ -41,11 +42,6 @@ const DUMMY_TASKS = [
   { id: 2, title: 'Survive 5 Minutes', progress: 5,  target: 5,  reward: '150 Coins', completed: true  },
   { id: 3, title: 'Collect 50 Blocks', progress: 35, target: 50, reward: '200 Coins', completed: false },
   { id: 4, title: 'Defeat 10 Enemies', progress: 7,  target: 10, reward: '250 Coins', completed: false },
-];
-const FALLBACK_LEADERBOARD = [
-  { rank: 1, username: 'DogePilot',   score: 0, avatar: '/images/doge_avatar.png' },
-  { rank: 2, username: 'WarpRacer',   score: 0, avatar: '/images/doge_avatar.png' },
-  { rank: 3, username: 'BlockHunter', score: 0, avatar: '/images/doge_avatar.png' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -98,7 +94,9 @@ export const GameProvider = ({ children }) => {
   const [selectedGun,       setSelectedGun]       = useState(DUMMY_GUNS[0]);
 
   // ── Social ─────────────────────────────────────────────────────────────────
-  const [leaderboard,  setLeaderboard]  = useState(FALLBACK_LEADERBOARD);
+  const [leaderboard,       setLeaderboard]       = useState([]);
+  const [leaderboardStatus, setLeaderboardStatus] = useState('loading'); // loading | ready | error
+  const [myRank,            setMyRank]            = useState(null);
   const [dailyTasks,   setDailyTasks]   = useState(DUMMY_TASKS);
   const [chatMessages, setChatMessages] = useState([
     { id: 1, username: 'System', message: 'Welcome to Doge Escape!', timestamp: new Date() },
@@ -154,21 +152,35 @@ export const GameProvider = ({ children }) => {
   }, [applyBCSV]);
 
   // ── Load leaderboard ───────────────────────────────────────────────────────
+  // Ranked by high score; ties share a rank. The API has no daily/weekly view.
   const loadLeaderboard = useCallback(async () => {
     try {
-      const { leaderboard: rows } = await getDecentralizedLeaderboard();
-      if (!rows?.length) return;
-      setLeaderboard(rows.map(e => ({
-        rank: e.rank,
-        username: e.displayName || `Pilot_${e.walletAddress?.slice(2, 8)}`,
-        score: e.coinSnapshot ?? 0,
-        wins:  e.gamesWon ?? e.saveIndex ?? 0,
-        avatar: '/images/doge_avatar.png',
-        delta: '—',
+      const { leaderboard: rows } = await getLeaderboard({ limit: 100 });
+      setLeaderboard((rows || []).map(e => ({
+        rank:          e.rank,
+        username:      e.displayName,
+        score:         e.stats?.highScore ?? 0,
+        kills:         e.stats?.totalKills ?? 0,
+        avatar:        '/images/doge_avatar.png',
         walletAddress: e.walletAddress,
       })));
+      setLeaderboardStatus('ready');
     } catch (err) {
       console.warn('[0G] Leaderboard failed:', err.message);
+      setLeaderboardStatus('error');
+    }
+  }, []);
+
+  // ── Own rank ───────────────────────────────────────────────────────────────
+  const loadMyRank = useCallback(async (token) => {
+    const activeJwt = token || getCachedJwt();
+    if (!activeJwt) return;
+    try {
+      const player = await getMyRank(activeJwt);
+      setMyRank(player?.rank ?? null);
+    } catch (err) {
+      console.warn('[0G]', err.message);
+      setMyRank(null);
     }
   }, []);
 
@@ -214,6 +226,7 @@ export const GameProvider = ({ children }) => {
     if (!account) {
       // Logged out — reset auth flag so next login works
       authAttempted.current = false;
+      setMyRank(null);
       return;
     }
 
@@ -226,6 +239,7 @@ export const GameProvider = ({ children }) => {
       console.log('[0G] JWT cached — loading save');
       setJwt(cached);
       loadSaveFromBackend(cached);
+      loadMyRank(cached);
       return;
     }
 
@@ -258,6 +272,7 @@ export const GameProvider = ({ children }) => {
 
         setJwt(token);
         loadSaveFromBackend(token);
+        loadMyRank(token);
       } catch (err) {
         console.error('[0G] Auth failed:', err.message);
         authAttempted.current = false;
@@ -273,8 +288,9 @@ export const GameProvider = ({ children }) => {
     await Promise.all([
       loadSaveFromBackend(),
       loadLeaderboard(),
+      loadMyRank(),
     ]);
-  }, [loadSaveFromBackend, loadLeaderboard]);
+  }, [loadSaveFromBackend, loadLeaderboard, loadMyRank]);
 
   // ── Marketplace ────────────────────────────────────────────────────────────
   const buyItem = useCallback((itemType, itemId) => {
@@ -321,7 +337,7 @@ export const GameProvider = ({ children }) => {
       selectedBoat, selectedCompanion, selectedGun,
       setSelectedBoat, setSelectedCompanion, setSelectedGun,
       buyItem, rentItem, addCoins, updateHighscore,
-      leaderboard, dailyTasks, chatMessages,
+      leaderboard, leaderboardStatus, myRank, dailyTasks, chatMessages,
       sendGlobalMessage, completeTask,
     }}>
       {children}

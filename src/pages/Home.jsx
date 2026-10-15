@@ -4,18 +4,15 @@ import AICompanionChat from '../components/AICompanionChat';
 import GlobalChat from '../components/GlobalChat';
 import DashboardScene from '../components/DashboardScene';
 import { useGame } from '../context/GameContext';
-import { useWallet } from '../context/WalletContext';
 
 const Home = () => {
   const {
     coins, highscore, level, gamesWon, totalKills,
-    leaderboard, saveLoading,
+    myRank, saveLoading,
   } = useGame();
 
-  // Find own rank from real leaderboard
-  const { address } = useWallet();
-  const myEntry    = leaderboard.find(e => e.walletAddress?.toLowerCase() === address?.toLowerCase());
-  const playerRank = myEntry?.rank ?? (leaderboard.length > 0 ? leaderboard.length + 1 : '—');
+  // Own rank from /leaderboard/me — '—' until the player has a ranked save
+  const playerRank = myRank ?? '—';
 
   const statCards = [
     { label: 'Coins',      value: saveLoading ? '…' : coins.toLocaleString(),    icon: '💰' },

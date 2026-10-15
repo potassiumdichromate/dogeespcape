@@ -2029,7 +2029,7 @@
   .rank-table-head,
   .rank-table-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(48px, 0.6fr) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
     gap: 16px;
   }
@@ -2088,6 +2088,12 @@
     height: 32px;
     border-radius: 8px;
     object-fit: cover;
+  }
+
+  .rank-table-empty {
+    padding: 28px 26px;
+    color: rgba(232, 220, 200, 0.64);
+    text-align: center;
   }
 
   .rank-table-row b {
@@ -2214,7 +2220,7 @@
 
     .rank-table-head,
     .rank-table-row {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: auto minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.8fr);
       min-width: 0;
       gap: 8px;
       padding-left: 10px;

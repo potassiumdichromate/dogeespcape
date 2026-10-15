@@ -1,17 +1,8 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
 const DailyTasksPanel = () => {
-  const { dailyTasks, completeTask } = useGame();
-  const [claimedReward, setClaimedReward] = useState(null);
-  const celebrationBits = ['💰', '💎', '⭐', '⚡', '🎉', '🏆', '✨', '🪙'];
-
-  const handleClaimReward = (taskId) => {
-    const task = dailyTasks.find((dailyTask) => dailyTask.id === taskId);
-    completeTask(taskId);
-    setClaimedReward(task);
-  };
+  const { dailyTasks } = useGame();
 
   return (
     <div className="panel-wood h-full flex flex-col relative">
@@ -82,16 +73,16 @@ const DailyTasksPanel = () => {
               </div>
             </div>
 
-            {/* Claim Button - Only show if completed */}
+            {/* Rewards are not live yet — show a disabled placeholder instead of Claim */}
             {task.completed && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleClaimReward(task.id)}
-                className="btn-primary w-full mt-2 text-xs py-1"
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                className="btn-primary w-full mt-2 text-xs py-1 opacity-60 cursor-not-allowed"
               >
-                🎁 Claim
-              </motion.button>
+                Coming Soon
+              </button>
             )}
           </motion.div>
         ))}
@@ -103,76 +94,6 @@ const DailyTasksPanel = () => {
           Resets: 23:45:12
         </div>
       </div>
-
-      <AnimatePresence>
-        {claimedReward && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-55 px-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="reward-confetti" aria-hidden="true">
-              {celebrationBits.map((bit, index) => (
-                <span
-                  key={`${bit}-${index}`}
-                  style={{
-                    left: `${10 + index * 11}%`,
-                    animationDelay: `${index * 0.12}s`,
-                  }}
-                >
-                  {bit}
-                </span>
-              ))}
-            </div>
-            <motion.div
-              initial={{ scale: 0.75, y: 30, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 12, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-              className="reward-modal panel-stone w-full max-w-sm p-5 text-center overflow-hidden"
-            >
-              <div className="reward-burst" />
-              <div className="reward-sparkles" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
-              <motion.div
-                animate={{ y: [0, -8, 0], rotate: [-4, 4, -4] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative z-10 mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-xl border-2 border-doge-gold bg-doge-darker text-4xl shadow-pixel"
-              >
-                🎁
-              </motion.div>
-              <div className="relative z-10 space-y-2">
-                <p className="text-xs uppercase tracking-wider text-doge-emerald">
-                  Quest Complete
-                </p>
-                <h3 className="text-xl text-doge-gold text-shadow-pixel">
-                  Reward Claimed
-                </h3>
-                <p className="text-sm text-doge-iron">
-                  {claimedReward.title}
-                </p>
-                <div className="mx-auto inline-flex items-center gap-2 rounded-lg border-2 border-doge-gold bg-doge-gold px-4 py-2 text-doge-darker shadow-pixel">
-                  <span>💰</span>
-                  <span className="font-bold">{claimedReward.reward}</span>
-                </div>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => setClaimedReward(null)}
-                className="btn-primary relative z-10 mt-5 w-full text-sm"
-              >
-                Awesome
-              </motion.button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
