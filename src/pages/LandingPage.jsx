@@ -19,6 +19,7 @@ import topperSecond from "../assets/R2.png";
 import topperThird from "../assets/R3.png";
 import { SectionThreeScene } from "../components/SectionThreeScene";
 import { useWallet } from "../context/WalletContext";
+import { getLeaderboard } from "../api/zerog";
 
 const iconPaths = {
   Youtube: [
@@ -570,7 +571,27 @@ function Row({ label, value, accent }) {
   );
 }
 
+// Card style and prize per podium slot; the players come from the live leaderboard.
+const TOPPER_SLOTS = [
+  { accent: "yellow", reward: "5,000", image: topperFirst },
+  { accent: "purple", reward: "3,000", image: topperSecond },
+  { accent: "orange", reward: "2,000", image: topperThird },
+];
+
 function WeeklyToppers() {
+  const [toppers, setToppers] = useState(null); // null = loading, [] = none / failed
+
+  useEffect(() => {
+    let cancelled = false;
+    getLeaderboard({ limit: 3 })
+      .then(({ leaderboard }) => { if (!cancelled) setToppers(leaderboard || []); })
+      .catch((err) => {
+        console.warn("[0G] Top players failed:", err.message);
+        if (!cancelled) setToppers([]);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <section id="leaderboard" className="relative overflow-hidden px-4 py-14 sm:px-6 sm:py-20 md:px-12 md:py-24">
       <SectionThreeScene variant="leaderboard" className="z-0 opacity-45 mix-blend-screen" />
@@ -591,9 +612,26 @@ function WeeklyToppers() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3">
-          <PodiumCard rank={1} accent="yellow" name="BLOCKMASTER" score="4,934" wins={96} games={342} winRate="28%" earned="4,934" reward="5,000" image={topperFirst} />
-          <PodiumCard rank={2} accent="purple" name="PIXELPRO" score="4,158" wins={74} games={310} winRate="24%" earned="4,158" reward="3,000" image={topperSecond} />
-          <PodiumCard rank={3} accent="orange" name="CREEPERKING" score="3,168" wins={61} games={276} winRate="22%" earned="3,168" reward="2,000" image={topperThird} />
+          {TOPPER_SLOTS.map((slot, index) => {
+            const player = toppers?.[index];
+            const stats = player?.stats;
+            const placeholder = toppers === null ? "…" : "—";
+            return (
+              <PodiumCard
+                key={slot.accent}
+                rank={index + 1}
+                accent={slot.accent}
+                name={player?.displayName || (toppers === null ? "Loading…" : "Open spot")}
+                score={stats ? stats.highScore.toLocaleString() : placeholder}
+                wins={stats ? stats.gamesWon.toLocaleString() : placeholder}
+                games={stats ? stats.gamesPlayed.toLocaleString() : placeholder}
+                winRate={stats ? `${stats.gamesPlayed ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0}%` : placeholder}
+                earned={stats ? stats.totalCoinsEarned.toLocaleString() : placeholder}
+                reward={slot.reward}
+                image={slot.image}
+              />
+            );
+          })}
         </div>
       </div>
     </section>
