@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import fullHero from "../assets/full-hero.png";
 import dogeEscapeLogo from "../assets/DogeEscape-logo.png";
 import dogeosHeadMove from "../assets/dogeos_head_move.gif";
@@ -98,7 +98,7 @@ const Bot = makeIcon("Bot");
 const navItems = [
   { label: "GAMEPLAY", href: "#gameplay" },
   { label: "FEATURES", href: "#features" },
-  { label: "RANK", href: "#leaderboard" },
+  { label: "RANK", to: "/leaderboard" },
 ];
 
 function OGLogo({ className = "inline h-5 w-auto align-[-0.2em]" }) {
@@ -156,15 +156,25 @@ function Nav({ onConnect, isConnecting }) {
           className="h-10 w-10 object-contain sm:h-14 sm:w-14"
         />
       </a>
-      <nav className="hidden gap-6 text-xs font-bold uppercase tracking-widest text-yellow-200/90 lg:flex">
+      <nav className="flex gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-yellow-200/90 sm:gap-6 sm:text-xs sm:tracking-widest">
         {navItems.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className="premium-link hover:text-yellow-400"
-          >
-            {item.label}
-          </a>
+          item.to ? (
+            <Link
+              key={item.label}
+              to={item.to}
+              className="premium-link hover:text-yellow-400"
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <a
+              key={item.label}
+              href={item.href}
+              className="premium-link hover:text-yellow-400"
+            >
+              {item.label}
+            </a>
+          )
         ))}
       </nav>
       <div className="hidden items-center gap-3 sm:flex">

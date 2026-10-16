@@ -222,6 +222,11 @@ export const GameProvider = ({ children }) => {
 
   // ── AUTO-AUTH ──────────────────────────────────────────────────────────────
 
+  // Public rankings — no wallet required.
+  useEffect(() => {
+    loadLeaderboard();
+  }, [loadLeaderboard]);
+
   useEffect(() => {
     if (!account) {
       // Logged out — reset auth flag so next login works
@@ -230,7 +235,6 @@ export const GameProvider = ({ children }) => {
       return;
     }
 
-    // Always refresh leaderboard (public)
     loadLeaderboard();
 
     // Use any valid cached JWT

@@ -148,14 +148,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/leaderboard"
-        element={
-          <ProtectedRoute>
-            <LeaderboardPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/leaderboard" element={<LeaderboardPage />} />
       <Route
         path="/profile"
         element={
